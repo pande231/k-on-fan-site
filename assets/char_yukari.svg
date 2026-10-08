@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800" font-family="'Noto Sans SC','Zen Maru Gothic',sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.75" y2="1">
+      <stop offset="0" stop-color="#ead4ad"/><stop offset="1" stop-color="#D9B26A"/>
+    </linearGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d6c9e1"/><stop offset="1" stop-color="#C9B8D8"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="800" fill="url(#bg)"/>
+  <circle cx="300" cy="300" r="235" fill="#ffffff" opacity="0.10"/>
+  <circle cx="300" cy="300" r="185" fill="#ffffff" opacity="0.08"/>
+  <text x="299" y="210" font-size="77" fill="#ffffff" opacity="0.21" font-family="serif">♫</text><text x="154" y="413" font-size="80" fill="#ffffff" opacity="0.22" font-family="serif">♩</text><text x="532" y="227" font-size="40" fill="#ffffff" opacity="0.18" font-family="serif">♪</text><text x="70" y="440" font-size="40" fill="#ffffff" opacity="0.11" font-family="serif">♩</text><text x="291" y="122" font-size="85" fill="#ffffff" opacity="0.16" font-family="serif">♫</text><text x="516" y="498" font-size="30" fill="#ffffff" opacity="0.12" font-family="serif">♫</text><text x="278" y="417" font-size="67" fill="#ffffff" opacity="0.18" font-family="serif">♬</text>
+  <path d="M178 560 Q180 470 300 468 Q420 470 422 560 L422 800 L178 800 Z" fill="#3E3A52"/>
+  <path d="M300 468 L268 470 L292 560 L300 560 Z" fill="#ffffff" opacity="0.92"/>
+  <path d="M300 468 L332 470 L308 560 L300 560 Z" fill="#ffffff" opacity="0.92"/>
+  <circle cx="300" cy="512" r="9" fill="#D9B26A"/>
+  <ellipse cx="300" cy="286" rx="96" ry="118" fill="url(#hair)"/>
+  <ellipse cx="300" cy="300" rx="82" ry="88" fill="#F6CBA0"/>
+  <path d="M214 292 Q214 210 300 208 Q386 210 386 292 Q386 262 356 258 Q344 232 300 232 Q256 232 244 258 Q214 262 214 292 Z" fill="url(#hair)"/>
+  <ellipse cx="272" cy="308" rx="9" ry="12" fill="#4A3F2E"/>
+  <ellipse cx="328" cy="308" rx="9" ry="12" fill="#4A3F2E"/>
+  <circle cx="275" cy="304" r="3" fill="#ffffff"/><circle cx="331" cy="304" r="3" fill="#ffffff"/>
+  <ellipse cx="248" cy="332" rx="11" ry="6" fill="#FF9EB5" opacity="0.5"/>
+  <ellipse cx="352" cy="332" rx="11" ry="6" fill="#FF9EB5" opacity="0.5"/>
+  <path d="M292 336 Q300 344 308 336" stroke="#C97A63" stroke-width="3" fill="none" stroke-linecap="round"/>
+  
+  <rect x="64" y="650" width="472" height="108" rx="26" fill="#ffffff" opacity="0.94"/>
+  <text x="300" y="696" text-anchor="middle" font-size="30" font-weight="700" fill="#5D4E37">佐久間 紫</text>
+  <text x="300" y="728" text-anchor="middle" font-size="22" fill="#8B7355">佐久间紫 ・ 鼓手・Shuffle</text>
+</svg>
