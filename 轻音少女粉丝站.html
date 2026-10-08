@@ -531,13 +531,13 @@ const MEDIA = {
   scene_ufo:'assets/scene_ufo.jpg',       // 第一季·四人夹娃娃机（1728x1080）
   gal_still4:'assets/gal_still4.jpg',      // 五人部室乐器围坐（3543x2509）
   /* 图库：official/scene/cd/wall/q/cut（空项为占位，可继续扩充） */
-  gallery_official:['assets/gal_promo1.jpg','assets/gal_still4.jpg','assets/scene_band1.jpg','assets/wc_816708_1920x1080.jpg','assets/wc_816753_1920x1080.jpg','assets/wc_816941_2560x1600.jpg','assets/wc_816807_2560x1440.jpg','assets/wc_816777_3840x2160.jpg','assets/wc_816791_3840x2160.jpg','assets/wc_816782_3840x2160.jpg','assets/wc_816787_3840x2160.jpg','assets/wc_816789_3840x2160.jpg','assets/banner1.jpg','assets/banner4.jpg','assets/scene_live2.jpg'],
-  gallery_scene:['assets/wc_816777_3840x2160.jpg','assets/wc_816791_3840x2160.jpg','assets/wc_816807_2560x1440.jpg','assets/scene_room4.jpg','assets/scene_band1.jpg','assets/scene_live4.jpg','assets/scene_ufo.jpg','assets/gal_still4.jpg','assets/scene_school.jpg','assets/banner4.jpg','assets/gal_still2.jpg','assets/scene_live1.jpg','assets/scene_room3.jpg','assets/scene_beach2.jpg','assets/scene_christmas2.jpg','assets/gal_still3.jpg','assets/scene_kyoto.jpg'],
+  gallery_official:['assets/gal_promo1.jpg','assets/gal_still4.jpg','assets/scene_band1.jpg','assets/wc_816708_1920x1080.jpg','assets/wc_816753_1920x1080.jpg','assets/wc_816941_2560x1600.jpg','assets/wc_816807_2560x1440.jpg','assets/wc_816777_3840x2160.jpg','assets/wc_816791_3840x2160.jpg','assets/wc_816782_3840x2160.jpg','assets/wc_816787_3840x2160.jpg','assets/wc_816789_3840x2160.jpg','assets/banner1.jpg','assets/banner4.jpg','assets/scene_live2.jpg','assets/banner3.jpg'],
+  gallery_scene:['assets/wc_816777_3840x2160.jpg','assets/wc_816791_3840x2160.jpg','assets/wc_816807_2560x1440.jpg','assets/scene_room4.jpg','assets/scene_band1.jpg','assets/scene_live4.jpg','assets/scene_ufo.jpg','assets/gal_still4.jpg','assets/scene_school.jpg','assets/banner4.jpg','assets/gal_still2.jpg','assets/scene_live1.jpg','assets/scene_room3.jpg','assets/scene_beach2.jpg','assets/scene_christmas2.jpg','assets/gal_still3.jpg','assets/scene_kyoto.jpg','assets/scene_compare.jpg'],
   gallery_cd:['assets/cd_cagayake.jpg','assets/gal_promo1.jpg','assets/banner1.jpg','assets/banner2.jpg'], /* CD封面：首张为真实单曲封面，其余可替换为对应专辑封面 */
-  gallery_wall:['assets/wc_816777_3840x2160.jpg','assets/wc_816791_3840x2160.jpg','assets/wc_816787_3840x2160.jpg','assets/wc_816782_3840x2160.jpg','assets/wc_816789_3840x2160.jpg','assets/wc_816941_2560x1600.jpg','assets/wc_816807_2560x1440.jpg','assets/wc_816725_2560x1600.jpg','assets/wc_816714_2560x1600.jpg','assets/wc_816954_2560x1600.jpg','assets/wc_816904_2560x1600.jpg','assets/banner1.jpg','assets/banner4.jpg','assets/char_yui.jpg','assets/char_azusa.jpg'],
+  gallery_wall:['assets/wc_816777_3840x2160.jpg','assets/wc_816791_3840x2160.jpg','assets/wc_816787_3840x2160.jpg','assets/wc_816782_3840x2160.jpg','assets/wc_816789_3840x2160.jpg','assets/wc_816941_2560x1600.jpg','assets/wc_816807_2560x1440.jpg','assets/wc_816725_2560x1600.jpg','assets/wc_816714_2560x1600.jpg','assets/wc_816954_2560x1600.jpg','assets/wc_816904_2560x1600.jpg','assets/banner1.jpg','assets/banner4.jpg','assets/char_yui.jpg','assets/char_azusa.jpg','assets/wc_816712_1125x2436.jpg','assets/wc_816732_1440x2560.jpg','assets/wc_816762_1080x1920.jpg','assets/wc_816766_1080x1920.jpg','assets/wc_816767_1080x1920.jpg','assets/wc_816774_1080x1920.jpg','assets/wc_816826_3840x1080.jpg','assets/wc_816866_1080x2400.jpg','assets/wc_816872_1080x2400.jpg'],
   gallery_q:['assets/gal_promo2.jpg','assets/char_azusa.jpg','assets/char_tsumugi.jpg','assets/char_ui.jpg'],
   gallery_cut:['assets/wc_816708_1920x1080.jpg','assets/wc_816777_3840x2160.jpg','assets/wc_816791_3840x2160.jpg','assets/wc_816807_2560x1440.jpg','assets/scene_room4.jpg','assets/scene_live4.jpg','assets/scene_ufo.jpg','assets/gal_still4.jpg','assets/gal_still1.jpg','assets/gal_still2.jpg','assets/gal_still3.jpg','assets/banner4.jpg','assets/scene_christmas1.jpg','assets/scene_kyoto.jpg','assets/scene_live1.jpg','assets/scene_live2.jpg','assets/scene_room3.jpg'],
-  /* 备用素材（尚未使用的实拍/场景图，可用于继续扩充图库）：scene_compare / scene_room1 / scene_room2 */
+  /* 注：scene_room1 / scene_room2 用于考据页关键词配图（见配图映射表），scene_compare 已并入 gallery_scene */
 };
 
 /* ============================================================
@@ -2881,6 +2881,9 @@ const GALLERY_CATS = [
   {id:'q',       name:'Q版插画', d:'Q版・ちびキャラ', icon:'heart', c:'#FFB7C5', n:4},
   {id:'cut',     name:'名场面合集', d:'剧情经典镜头合集', icon:'mic', c:'#F2B63E', n:17}
 ];
+/* 分类张数以 MEDIA 数组实际长度为准：galleryItems() 按 n 截断，
+   n 与数组脱节会渲染出空白占位块，这里统一同步，避免两处手工维护 */
+GALLERY_CATS.forEach(c=>{ const a = MEDIA['gallery_'+c.id]; if(a && a.length) c.n = a.length; });
 /* 图库条目生成（占位；替换 MEDIA.gallery_xxx 数组即可） */
 function galleryItems(catId){
   const c = GALLERY_CATS.find(x=>x.id===catId);
