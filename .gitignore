@@ -1,9 +1,14 @@
 # 开发临时脚本（抓图 / 改写 / 检查用，非站点本体）
 _*.py
 _*.js
+_*.mjs
 _*.flag
 _*.txt
 
 # 布局测试与截图产物
 _layout_test.html
 _shots/
+_preview/
+
+# 图片 QA 裁切产物（_qa_crops/tile*.png、zoom*.png 等）
+_qa_crops/

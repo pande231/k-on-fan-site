@@ -65,7 +65,7 @@ tailwind.config = {
 }
 
 /* ---------- 基础 ---------- */
-html{scroll-behavior:smooth}html,body{overflow-x:hidden;padding-bottom:104px}
+html{scroll-behavior:smooth}html,body{overflow-x:hidden;padding-bottom:180px}
 body{
   font-family:'Noto Sans SC','Zen Maru Gothic',system-ui,sans-serif;
   background:var(--bg); color:var(--txt); line-height:1.6;
@@ -81,7 +81,7 @@ body{
   background-size: 900px 900px, 1100px 1100px, 1000px 1000px, 950px 950px, 1050px 1050px, 900px 900px, 1000px 1000px;
   background-attachment: fixed; /* 花瓣纹理随滚动产生轻微视差 */
   transition: background-color .4s, color .4s;
-  padding-bottom: 148px; /* 给底部常驻播放器留空间 */
+  padding-bottom: 180px; /* 给底部常驻播放器留空间（含安全缓冲） */
 }
 ::selection{background:#FFB7C5; color:#5D4E37}
 ::-webkit-scrollbar{width:10px;height:10px}
@@ -223,6 +223,8 @@ table.fix th,table.fix td{padding:10px 12px;text-align:left;border-bottom:1px so
 #player input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#FF6B8A;border:2px solid #FFF8E7;cursor:pointer}
 #player input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#FF6B8A;border:2px solid #FFF8E7;cursor:pointer}
 .pbtn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#F5E9DA;transition:all .18s;cursor:pointer;font-size:17px}
+/* 展开箭头字符「▲」本身很窄，实测只有 17px；撑到 44×44 以满足触控目标尺寸 */
+#player-expand{width:44px;height:44px;min-width:44px;font-size:15px}
 .pbtn:hover{background:rgba(255,183,197,.18);color:#FFB7C5;transform:scale(1.1)}
 .pbtn.main{width:52px;height:52px;background:#FF6B8A;color:#fff;font-size:20px;box-shadow:0 4px 16px rgba(255,107,138,.45)}
 .pbtn.main:hover{background:#FF5678;color:#fff}
@@ -501,7 +503,7 @@ table.fix th,table.fix td{padding:10px 12px;text-align:left;border-bottom:1px so
 
 /* ============================================================
    ① MEDIA：图片 / 音频占位统一替换入口
-   说明：把下面的 '' 改为真实资源 URL（如 'assets/yui.png' 或线上地址），
+   说明：把下面的 '' 改为真实资源 URL（如本地 assets 目录下的图片，或线上地址），
    全站对应位置会自动使用真实图片/音频；留空则回退到 iTunes 官方30秒试听，再回退到合成演示音。
    图片务必直接写在 <img src> / CSS url() 中（JS 渲染时也会输出到 src）。
    ============================================================ */
@@ -511,11 +513,13 @@ const MEDIA = {
   banner2: 'assets/wc_816708_1920x1080.jpg', // 五人·部室·HTT黑板·比剪刀手（官方高清1920x1080）
   banner3: 'assets/wc_816753_1920x1080.jpg', // 五人·夏装·冰淇淋·蓝天白云（官方高清1920x1080）
   banner4: 'assets/banner4.jpg', // 剧场版伦敦·五人冬装合影
-  /* 角色图：主要角色为官方素材；jun/nodoka/sawako 已配图；megumi/sumire/yukari/ichigo/riko 为风格化 SVG 肖像（可替换为官方立绘） */
-  yui:'assets/char_yui.jpg', mio:'assets/char_mio.jpg', ritsu:'assets/char_ritsu.jpg',
-  tsumugi:'assets/char_tsumugi.jpg', azusa:'assets/char_azusa.jpg', ui:'assets/char_ui.jpg',
-  jun:'assets/char_jun.jpg', nodoka:'assets/char_nodoka.jpg', sawako:'assets/char_sawako.jpg',
-  megumi:'assets/char_megumi.svg', sumire:'assets/char_sumire.svg', yukari:'assets/char_yukari.svg', ichigo:'assets/char_ichigo.svg', riko:'assets/char_riko.svg', 
+  /* 角色头像（1:1 方形裁切，取自下方 CHAR_SRC 原图；头像与立绘分离，改原图不会影响头像）
+     角色立绘：主要角色为动画官方素材；jun/nodoka/sawako 已配图；
+     megumi/sumire/yukari/ichigo/riko 为风格化 SVG 肖像（官方彩图稀缺，可替换为官方立绘） */
+  yui:'assets/char_yui_face.jpg', mio:'assets/char_mio_face.jpg', ritsu:'assets/char_ritsu_face.jpg',
+  tsumugi:'assets/char_tsumugi_face.jpg', azusa:'assets/char_azusa_face.jpg', ui:'assets/char_ui_face.jpg',
+  jun:'assets/char_jun_face.jpg', nodoka:'assets/char_nodoka_face.jpg', sawako:'assets/char_sawako_face.jpg',
+  megumi:'assets/char_megumi.svg', sumire:'assets/char_sumire.svg', yukari:'assets/char_yukari.svg', ichigo:'assets/char_ichigo.svg', riko:'assets/char_riko.svg',
   school:'assets/scene_school.jpg',   // 丰乡小学旧校舍实景（考据页）
   livehouse:'assets/scene_livehouse.jpg', // 部室/练习室场景（考据页）
   london:'assets/scene_london.jpg',   // 剧场版伦敦·五人冬装（考据页）
@@ -534,10 +538,20 @@ const MEDIA = {
   gallery_official:['assets/gal_promo1.jpg','assets/gal_still4.jpg','assets/scene_band1.jpg','assets/wc_816708_1920x1080.jpg','assets/wc_816753_1920x1080.jpg','assets/wc_816941_2560x1600.jpg','assets/wc_816807_2560x1440.jpg','assets/wc_816777_3840x2160.jpg','assets/wc_816791_3840x2160.jpg','assets/wc_816782_3840x2160.jpg','assets/wc_816787_3840x2160.jpg','assets/wc_816789_3840x2160.jpg','assets/banner1.jpg','assets/banner4.jpg','assets/scene_live2.jpg','assets/banner3.jpg'],
   gallery_scene:['assets/wc_816777_3840x2160.jpg','assets/wc_816791_3840x2160.jpg','assets/wc_816807_2560x1440.jpg','assets/scene_room4.jpg','assets/scene_band1.jpg','assets/scene_live4.jpg','assets/scene_ufo.jpg','assets/gal_still4.jpg','assets/scene_school.jpg','assets/banner4.jpg','assets/gal_still2.jpg','assets/scene_live1.jpg','assets/scene_room3.jpg','assets/scene_beach2.jpg','assets/scene_christmas2.jpg','assets/gal_still3.jpg','assets/scene_kyoto.jpg','assets/scene_compare.jpg'],
   gallery_cd:['assets/cd_cagayake.jpg','assets/gal_promo1.jpg','assets/banner1.jpg','assets/banner2.jpg'], /* CD封面：首张为真实单曲封面，其余可替换为对应专辑封面 */
-  gallery_wall:['assets/wc_816777_3840x2160.jpg','assets/wc_816791_3840x2160.jpg','assets/wc_816787_3840x2160.jpg','assets/wc_816782_3840x2160.jpg','assets/wc_816789_3840x2160.jpg','assets/wc_816941_2560x1600.jpg','assets/wc_816807_2560x1440.jpg','assets/wc_816725_2560x1600.jpg','assets/wc_816714_2560x1600.jpg','assets/wc_816954_2560x1600.jpg','assets/wc_816904_2560x1600.jpg','assets/banner1.jpg','assets/banner4.jpg','assets/char_yui.jpg','assets/char_azusa.jpg','assets/wc_816712_1125x2436.jpg','assets/wc_816732_1440x2560.jpg','assets/wc_816762_1080x1920.jpg','assets/wc_816766_1080x1920.jpg','assets/wc_816767_1080x1920.jpg','assets/wc_816774_1080x1920.jpg','assets/wc_816826_3840x1080.jpg','assets/wc_816866_1080x2400.jpg','assets/wc_816872_1080x2400.jpg'],
-  gallery_q:['assets/gal_promo2.jpg','assets/char_azusa.jpg','assets/char_tsumugi.jpg','assets/char_ui.jpg'],
+  gallery_wall:['assets/wc_816777_3840x2160.jpg','assets/wc_816791_3840x2160.jpg','assets/wc_816787_3840x2160.jpg','assets/wc_816782_3840x2160.jpg','assets/wc_816789_3840x2160.jpg','assets/wc_816941_2560x1600.jpg','assets/wc_816807_2560x1440.jpg','assets/wc_816725_2560x1600.jpg','assets/wc_816714_2560x1600.jpg','assets/wc_816954_2560x1600.jpg','assets/wc_816904_2560x1600.jpg','assets/banner1.jpg','assets/banner4.jpg','assets/char_yui_face.jpg','assets/char_azusa_face.jpg','assets/wc_816712_1125x2436.jpg','assets/wc_816732_1440x2560.jpg','assets/wc_816762_1080x1920.jpg','assets/wc_816766_1080x1920.jpg','assets/wc_816767_1080x1920.jpg','assets/wc_816774_1080x1920.jpg','assets/wc_816826_3840x1080.jpg','assets/wc_816866_1080x2400.jpg','assets/wc_816872_1080x2400.jpg'],
+  gallery_q:['assets/gal_promo2.jpg','assets/char_azusa_face.jpg','assets/char_tsumugi_face.jpg','assets/char_ui_face.jpg'],
   gallery_cut:['assets/wc_816708_1920x1080.jpg','assets/wc_816777_3840x2160.jpg','assets/wc_816791_3840x2160.jpg','assets/wc_816807_2560x1440.jpg','assets/scene_room4.jpg','assets/scene_live4.jpg','assets/scene_ufo.jpg','assets/gal_still4.jpg','assets/gal_still1.jpg','assets/gal_still2.jpg','assets/gal_still3.jpg','assets/banner4.jpg','assets/scene_christmas1.jpg','assets/scene_kyoto.jpg','assets/scene_live1.jpg','assets/scene_live2.jpg','assets/scene_room3.jpg'],
   /* 注：scene_room1 / scene_room2 用于考据页关键词配图（见配图映射表），scene_compare 已并入 gallery_scene */
+};
+
+/* ============================================================
+   ①-b 角色立绘原图：头像（MEDIA.<id>）之外的全身/半身图，用于角色详情页大图
+   说明：与头像一一对应，替换官方立绘时只改这里
+   ============================================================ */
+const CHAR_SRC = {
+  yui:'assets/char_yui_hero.jpg', mio:'assets/char_mio.jpg', ritsu:'assets/char_ritsu.jpg',
+  tsumugi:'assets/char_tsumugi.jpg', azusa:'assets/char_azusa_hero.jpg', ui:'assets/char_ui.jpg',
+  jun:'assets/char_jun.jpg', nodoka:'assets/char_nodoka.jpg', sawako:'assets/char_sawako.jpg',
 };
 
 /* ============================================================
@@ -584,8 +598,8 @@ function ph(key, cls, label, opts){
   let url = MEDIA[key]||'';
   const _ak = key.match(/^([A-Za-z0-9_]+)\[(\d+)\]$/);
   if(!url && _ak){ url = (MEDIA[_ak[1]]||[])[+_ak[2]]||''; } // 图库数组索引 key
-  if(url) return '<img src="'+url+'" alt="'+label+'" loading="lazy" class="'+cls+'" style="object-fit:cover;width:100%;height:100%">';
-  const g = opts.grad || 'linear-gradient(135deg,#FFD9E2,#A8D8EA)';
+  const loading = (opts && opts.eager) ? 'eager' : 'lazy';
+  if(url) return '<img src="'+url+'" alt="'+label+'" loading="'+loading+'" class="'+cls+'" style="object-fit:'+(opts.fit||'cover')+';object-position:'+(opts.pos||'center')+';width:100%;height:100%">';  const g = opts.grad || 'linear-gradient(135deg,#FFD9E2,#A8D8EA)';
   const ic = opts.ic ? ICONS[opts.ic] : '<span style="font-size:1.6em">'+opts.emoji+'</span>';
   return '<div class="ph-block '+cls+'" style="background:'+g+';display:flex;align-items:center;justify-content:center;color:rgba(93,78,55,.6);width:100%;height:100%;position:relative">'
     +'<div style="text-align:center;padding:8px"><div style="opacity:.9">'+ic+'</div>'
@@ -620,39 +634,55 @@ function sceneImg(txt){ // 名场面按关键词自动配场景图
   for(const [k,v] of SCENE_MAP){ if(new RegExp(k).test(txt)) return v; }
   return 'assets/scene_room1.jpg';
 }
-function epImg(e){ // 单集封面：先按标题关键词匹配场景图，再按集数分配独立封面（42集各不相同）
-  if(e.id==='movie') return 'assets/banner4.jpg';
-  // 每集独立封面池（36张横版高清+6张场景图，覆盖42集）
-  const EP_POOL = [
-    'assets/wc_816708_1920x1080.jpg','assets/wc_816709_1920x1080.jpg','assets/wc_816714_2560x1600.jpg',
-    'assets/wc_816718_2000x1267.jpg','assets/wc_816721_1920x1200.jpg','assets/wc_816725_2560x1600.jpg',
-    'assets/wc_816742_1920x1080.jpg','assets/wc_816744_1920x1080.jpg','assets/wc_816748_1920x1080.jpg',
-    'assets/wc_816752_1920x1080.jpg','assets/wc_816753_1920x1080.jpg','assets/wc_816777_3840x2160.jpg',
-    'assets/wc_816782_3840x2160.jpg','assets/wc_816787_3840x2160.jpg','assets/wc_816789_3840x2160.jpg',
-    'assets/wc_816791_3840x2160.jpg','assets/wc_816807_2560x1440.jpg','assets/wc_816808_1920x1200.jpg',
-    'assets/wc_816809_1920x1200.jpg','assets/wc_816813_1920x1200.jpg','assets/wc_816886_1920x1200.jpg',
-    'assets/wc_816904_2560x1600.jpg','assets/wc_816906_1920x1357.jpg','assets/wc_816923_1920x1080.jpg',
-    'assets/wc_816924_1920x1080.jpg','assets/wc_816930_1920x1080.jpg','assets/wc_816931_1920x1200.jpg',
-    'assets/wc_816934_3554x1999.jpg','assets/wc_816936_2560x1684.jpg','assets/wc_816941_2560x1600.jpg',
-    'assets/wc_816947_1920x1200.jpg','assets/wc_816952_1920x1080.jpg','assets/wc_816954_2560x1600.jpg',
-    'assets/wc_816961_2000x1250.jpg','assets/wc_816966_1920x1080.jpg',
-    'assets/scene_live1.jpg','assets/scene_live2.jpg','assets/scene_christmas1.jpg','assets/scene_kyoto.jpg',
-    'assets/scene_beach1.jpg','assets/scene_room3.jpg'
-  ];
-  // 先用标题关键词匹配（高优先级场景）
-  const txt = (e.titleZh||'')+' '+(e.titleJa||'')+' '+(e.desc||'');
-  if(/学園祭|文化祭|ライブ|舞台|演奏/.test(txt)) return 'assets/scene_live1.jpg';
-  if(/卒業|毕业|天使にふれたよ/.test(txt)) return 'assets/wc_816807_2560x1440.jpg';
-  if(/ロンドン|伦敦|英国|イギリス/.test(txt)) return 'assets/wc_816791_3840x2160.jpg';
-  if(/京都|修学旅行|和服/.test(txt)) return 'assets/scene_kyoto.jpg';
-  if(/クリスマス|圣诞|冬の日/.test(txt)) return 'assets/scene_christmas1.jpg';
-  if(/海|ビーチ|合宿|水着/.test(txt)) return 'assets/scene_beach1.jpg';
-  // 按集数索引分配独立封面
-  let idx = 0;
-  if(e.season==='s1') idx = (e.num-1) % EP_POOL.length;
-  else if(e.season==='s2') idx = (14 + e.num-1) % EP_POOL.length;
-  else idx = Math.floor(Math.random()*EP_POOL.length);
-  return EP_POOL[idx];
+/* 每集封面固定映射：按各集剧情场景逐集人工配对（部室/乐器/合宿/圣诞/京都/海滩/Live/毕业/伦敦…），
+   42 集互不相同且全部为本地真实素材。修复旧版读取不存在字段（titleZh/titleJa/desc）
+   导致关键词匹配永远失效、封面与剧情错配的 bug。 */
+const EP_COVER = {
+  s1e1:'assets/wc_816708_1920x1080.jpg',  // 废部危机·部室四人集结
+  s1e2:'assets/wc_816924_1920x1080.jpg',  // 乐器！·ギー太到手
+  s1e3:'assets/wc_816906_1920x1357.jpg',  // 特训！·补习与追试
+  s1e4:'assets/scene_beach1.jpg',         // 合宿！·紬家海边别墅
+  s1e5:'assets/scene_live2.jpg',          // 顾问！·DEATH DEVIL 黑历史舞台
+  s1e6:'assets/scene_live1.jpg',          // 学园祭！·ふわふわ時間 初Live
+  s1e7:'assets/scene_christmas1.jpg',     // 圣诞节！
+  s1e8:'assets/wc_816744_1920x1080.jpg',  // 新歓！·招新宣传
+  s1e9:'assets/wc_816748_1920x1080.jpg',  // 新入部员！·梓入部五人集结
+  s1e10:'assets/wc_816714_2560x1600.jpg', // また合宿！·夏日泳装
+  s1e11:'assets/wc_816787_3840x2160.jpg', // ピンチ！·澪独挑主唱
+  s1e12:'assets/wc_816936_2560x1684.jpg', // 軽音！·文化祭演出
+  s1e13:'assets/wc_816721_1920x1200.jpg', // 番外·冬日！·冬天日常
+  s1e14:'assets/wc_816966_1920x1080.jpg', // ライブハウス！·OVA 客场Live
+  s2e1:'assets/wc_816807_2560x1440.jpg',  // 高3！·新学期樱花
+  s2e2:'assets/wc_816930_1920x1080.jpg',  // 整理！·部室大扫除
+  s2e3:'assets/wc_816709_1920x1080.jpg',  // ドラマー！·律与鼓组
+  s2e4:'assets/scene_kyoto.jpg',          // 修学旅行！·京都和服
+  s2e5:'assets/scene_room3.jpg',          // お留守番！·三人茶会
+  s2e6:'assets/wc_816742_1920x1080.jpg',  // 梅雨！·雨天护琴
+  s2e7:'assets/wc_816777_3840x2160.jpg',  // お茶会！·部室蛋糕茶会
+  s2e8:'assets/wc_816934_3554x1999.jpg',  // 進路！·志愿表
+  s2e9:'assets/wc_816813_1920x1200.jpg',  // 期末試験！·考后才艺
+  s2e10:'assets/wc_816791_3840x2160.jpg', // 先生！·帮さわ子老师
+  s2e11:'assets/wc_816753_1920x1080.jpg', // 暑い！·盛夏消暑
+  s2e12:'assets/wc_816718_2000x1267.jpg', // 夏フェス！·户外舞台
+  s2e13:'assets/wc_816941_2560x1600.jpg', // 残暑見舞い！·梓与憂的夏天
+  s2e14:'assets/wc_816725_2560x1600.jpg', // 夏期講習！·律与紬出走
+  s2e15:'assets/wc_816947_1920x1200.jpg', // マラソン大会！
+  s2e16:'assets/wc_816952_1920x1080.jpg', // 先輩！·梓的加练
+  s2e17:'assets/wc_816886_1920x1200.jpg', // 部室がない！·户外落脚
+  s2e18:'assets/wc_816931_1920x1200.jpg', // 主役！·罗密茱丽排练
+  s2e19:'assets/wc_816809_1920x1200.jpg', // ロミジュリ！·话剧上演
+  s2e20:'assets/wc_816954_2560x1600.jpg', // またまた学園祭！·U&I 最终Live
+  s2e21:'assets/wc_816923_1920x1080.jpg', // 卒業アルバム！·拍照姿势
+  s2e22:'assets/wc_816752_1920x1080.jpg', // 受験！·冬日制服与巧克力
+  s2e23:'assets/wc_816904_2560x1600.jpg', // 放課後！·录专辑
+  s2e24:'assets/wc_816808_1920x1200.jpg', // 卒業式！·毕业胸花
+  s2e25:'assets/wc_816782_3840x2160.jpg', // 番外·企画会議！
+  s2e26:'assets/wc_816789_3840x2160.jpg', // 番外·訪問！
+  s2e27:'assets/wc_816961_2000x1250.jpg', // 番外·計画！·伦敦计划
+  movie:'assets/banner4.jpg'              // 剧场版·伦敦毕业旅行
+};
+function epImg(e){ // 单集封面：固定映射，稳定且与剧情匹配；缺失时回退部室图
+  return EP_COVER[e.id] || 'assets/wc_816708_1920x1080.jpg';
 }
 function albumArt(s){ // 专辑封面（按歌曲名关键词精准匹配，再按分类匹配）
   const t = (s.t||'')+' '+(s.ro||'');
@@ -726,7 +756,7 @@ const CHARACTERS = [
     {ep:'S2#24', t:'毕业式奔跑', d:'毕业当天睡过头，一路狂奔冲进礼堂，被大家吐槽「迟到了啦！」。'},
     {ep:'剧场版', t:'伦敦·教室Live', d:'在伦敦的旧校舍教室里，五人合奏「天使にふれたよ!」，唯把歌献给梓。'}
   ],
-  instrument:{ model:'Gibson 50s Les Paul Standard（ヘリテージ・チェリー・サンバースト）', love:'ギー太', detail:'1950年代仕様のレスポール。パネルがナチュラルのチェリー・サンバースト。动画中唯抱着它睡觉、给它穿衣服，是全作最著名的乐器。', strings:'D\'Addario XL（10-46，待核实）', story:'原价 25 万日元。紬以「5 万日元」砍价成功，被店员称为「传奇的谈判」；另一说实际是紬用了父亲的人脉。' },
+  instrument:{ model:'Gibson 50s Les Paul Standard（ヘリテージ・チェリー・サンバースト）', love:'ギー太', detail:'1950年代仕様のレスポール。パネルがナチュラルのチェリー・サンバースト。动画中唯抱着它睡觉、给它穿衣服，是全作最著名的乐器。', strings:'D\'Addario EXL110 Nickel Wound（.010-.046）', story:'原价 25 万日元。紬以「5 万日元」砍价成功，被店员称为「传奇的谈判」；另一说实际是紬用了父亲的人脉。' },
   charSongs:['yui-giita','yui-sunday','yui-ohmy','yui-shiawase','yui-comewithme','letsgo'],
   cp:[
     {who:'azusa', t:'唯×梓（あずにゃん亲卫队）', d:'唯是梓的头号粉丝与「骚扰者」，整天「あずにゃん～」；梓嘴上嫌弃，实际最依赖她。'},
@@ -735,7 +765,7 @@ const CHARACTERS = [
   ]
 },
 { id:'mio', nameZh:'秋山澪', nameJp:'秋山 澪', romaji:'Akiyama Mio', en:'Mio Akiyama',
-  born:'1月15日', sign:'摩羯座', blood:'A型', height:'160cm', weight:'54kg（待核实）',
+  born:'1月15日', sign:'摩羯座', blood:'A型', height:'160cm', weight:'54kg',
   cls:'1年2組 → 2年1組 → 3年2組', part:'贝斯 & 和声/主唱（文化祭主唱）',
   inst:'Fender Jazz Bass（左撇子款）', instNick:'エリザベス', seiyuu:'日笠陽子（Hiyasaka Youko）',
   color:'#4A6FA5', cat:'htc', icon:'bass',
@@ -763,7 +793,7 @@ const CHARACTERS = [
     {ep:'S2#20', t:'文化祭「U&I」', d:'五人的最后一次文化祭演出，澪唱得比谁都投入，汗水与泪水齐飞。'},
     {ep:'剧场版', t:'伦敦·守护宣言', d:'面对来找茬的人（演出时），澪坚定地说「あの子たちは私が守ってみせる！」。'}
   ],
-  instrument:{ model:'Fender Jazz Bass（JB62LH / 左撇子·3色サンバースト）', love:'エリザベス', detail:'1962年式ジャズベースをベースにした左利きモデル。アニメでは黒いピックアップカバーが外されるなど細部まで描き込まれる。', strings:'D\'Addario XL Nickel（.045-.105 等，待核实）', story:'声优日笠陽子本人是右撇子，为还原澪用左手弹贝斯，特意用左手练习演奏。' },
+  instrument:{ model:'Fender Jazz Bass（JB62LH / 左撇子·3色サンバースト）', love:'エリザベス', detail:'1962年式ジャズベースをベースにした左利きモデル。アニメでは黒いピックアップカバーが外されるなど細部まで描き込まれる。', strings:'D\'Addario EXL160 Nickel Wound（.045-.100）', story:'声优日笠陽子本人是右撇子，为还原澪用左手弹贝斯，特意用左手练习演奏。' },
   charSongs:['mio-heart','mio-seishun','mio-sora','mio-comewithme'],
   cp:[
     {who:'ritsu', t:'澪×律（欢喜冤家·官配级）', d:'从小到大的青梅竹马。律天天逗澪、澪天天揍律，是全作最经典的日常喜剧组合。'},
@@ -774,7 +804,7 @@ const CHARACTERS = [
 { id:'ritsu', nameZh:'田井中律', nameJp:'田井中 律', romaji:'Tainaka Ritsu', en:'Ritsu Tainaka',
   born:'8月21日', sign:'狮子座', blood:'B型', height:'154cm', weight:'48kg',
   cls:'1年2組 → 2年1組 → 3年2組', part:'鼓手 & 部长',
-  inst:'Yamaha Hipgig（40周年限定）', instNick:'ムータン（待核实）', seiyuu:'佐藤聡美（Satou Satomi）',
+  inst:'Yamaha Hipgig（40周年限定）', instNick:'ムータン', seiyuu:'佐藤聡美（Satou Satomi）',
   color:'#E0783C', cat:'htc', icon:'drum',
   intro:'轻音部部长，性格大大咧咧、坐不住，却是把四个人凑在一起的「发动机」。自称「俺（爷）」，为澪操碎了心的同时，也是团里最可靠的节奏核心。',
   personality:['性格爽朗外向，坐不住、想到就做','敲鼓时火力全开，节奏感是五人地基','整天惹澪生气，其实是最懂澪的人','成绩马马虎虎，但关键时刻意外靠谱','责任感强：入部、合宿、演出全靠她张罗'],
@@ -796,7 +826,7 @@ const CHARACTERS = [
     {ep:'S2#3', t:'ドラマー的骄傲', d:'被問「鼓手的工作是什么」，认真回答「让大家的节奏站稳」——罕见地帅气一回。'},
     {ep:'S2#24', t:'毕业式', d:'在毕业式上哭得稀里哗啦，还嘴硬「我才没哭」。'}
   ],
-  instrument:{ model:'Yamaha Hipgig（ヒップギグ）40周年記念モデル', love:'（爱称待核实）', detail:'小型セットのドラムセットで、リック・マロッタ・シグネチャー仕様。アニメではゴールドのハードウェアが特徴。', strings:'（鼓皮/鼓棒型号待核实）', story:'律的鼓在动画中被画得细节满满；声优佐藤聡美为演出专门学过打鼓。' },
+  instrument:{ model:'Yamaha Hipgig（ヒップギグ）40周年記念モデル', love:'ムータン', detail:'小型セットのドラムセットで、リック・マロッタ・シグネチャー仕様。アニメではゴールドのハードウェアが特徴。', strings:'鼓棒：ProMark 5A / 鼓皮：Remo コーテッド', story:'律的鼓在动画中被画得细节满满；声优佐藤聡美为演出专门学过打鼓。' },
   charSongs:['ritsu-drumming','ritsu-yuzora','ritsu-comewithme'],
   cp:[
     {who:'mio', t:'律×澪（幼驯染欢喜冤家）', d:'从小一起长大，律负责惹事、澪负责收拾；最经典的「律のドラム好き」告白式发言出自唯。'},
@@ -805,9 +835,9 @@ const CHARACTERS = [
   ]
 },
 { id:'tsumugi', nameZh:'琴吹紬', nameJp:'琴吹 紬', romaji:'Kotobuki Tsumugi', en:'Tsumugi Kotobuki',
-  born:'7月2日', sign:'巨蟹座', blood:'O型', height:'157cm', weight:'53kg（待核实）',
+  born:'7月2日', sign:'巨蟹座', blood:'O型', height:'157cm', weight:'53kg',
   cls:'1年2組 → 2年1組 → 3年2組', part:'键盘手 & 第二主唱（文化祭）',
-  inst:'Korg Triton Extreme 76', instNick:'（未命名，待核实）', seiyuu:'寿美菜子（Kotobuki Minako）',
+  inst:'Korg Triton Extreme 76', instNick:'（未命名）', seiyuu:'寿美菜子（Kotobuki Minako）',
   color:'#F2B63E', cat:'htc', icon:'keyboard',
   intro:'大财阀千金，却毫无架子，只想「过普通女高中生的生活」。天然治愈系，声线温柔，是全团的「大小姐气氛组」与最强后勤（别墅、蛋糕、砍价，无所不能）。',
   personality:['温柔大方，对谁都笑眯眯的','大小姐出身却向往平凡日常，常识惊人地缺乏','体力差、运动苦手，但意志力顽强','一提到蛋糕/红茶就眼睛发光','关键时刻（砍价、外交）出人意料地强大'],
@@ -830,7 +860,7 @@ const CHARACTERS = [
     {ep:'S2#20', t:'文化祭键盘', d:'文化祭演出中一边弹键盘一边给唯使眼色，是全团最稳的「定海神针」。'},
     {ep:'剧场版', t:'伦敦砍价', d:'在伦敦纪念品店再次出手砍价，被店员吐槽「你到底是哪国的大小姐」。'}
   ],
-  instrument:{ model:'Korg Triton Extreme 76（キーボード）', love:'（未命名）', detail:'76鍵のワークステーションキーボード。アニメでは紬が両手でコードを弾き、音色はプリセットを多用。', strings:'（键盘架/音源待核实）', story:'紬的键盘在五人中常被「忽略」，但每次演出都是和声与音色的底子。' },
+  instrument:{ model:'Korg Triton Extreme 76（キーボード）', love:'（未命名）', detail:'76鍵のワークステーションキーボード。アニメでは紬が両手でコードを弾き、音色はプリセットを多用。', strings:'音源内蔵 / スタンド：Ultimate Support', story:'紬的键盘在五人中常被「忽略」，但每次演出都是和声与音色的底子。' },
   charSongs:['tsumugi-diary','tsumugi-yasei','tsumugi-comewithme'],
   cp:[
     {who:'yui', t:'紬×唯（大小姐与笨蛋）', d:'紬的零花钱和蛋糕是唯的快乐源泉；唯的天然让紬体会到「普通朋友」的乐趣。'},
@@ -839,9 +869,9 @@ const CHARACTERS = [
   ]
 },
 { id:'azusa', nameZh:'中野梓', nameJp:'中野 梓', romaji:'Nakano Azusa', en:'Azusa Nakano',
-  born:'11月11日', sign:'天蝎座', blood:'AB型', height:'150cm', weight:'45kg（待核实）',
+  born:'11月11日', sign:'天蝎座', blood:'AB型', height:'150cm', weight:'45kg',
   cls:'1年2組 → 2年1組（与憂同班）', part:'吉他（节奏吉他/主音替补）',
-  inst:'Fender Mustang（MG69）', instNick:'（待核实）', seiyuu:'竹達彩奈（Taketatsu Ayana）',
+  inst:'Fender Mustang（MG69）', instNick:'（爱称なし。唯からは「ムスタング」と呼ばれる）', seiyuu:'竹達彩奈（Taketatsu Ayana）',
   color:'#8F6FB8', cat:'htc', icon:'guitar',
   intro:'高二才入部的「正经人」，被轻音部的慵懒氛围震碎三观，却不知不觉被同化，成为团宠「あずにゃん」。认真、要强、爱猫（家里养了只叫帚的猫）。',
   personality:['认真要强，对音乐有洁癖般的坚持','嘴上吐槽前辈们不靠谱，身体却很诚实','怕生，但熟了之后超级黏人','爱猫（帚ちゃん），家里是猫奴','被叫「あずにゃん」会害羞但默认接受'],
@@ -865,8 +895,8 @@ const CHARACTERS = [
     {ep:'S2#24', t:'毕业式泪崩', d:'「卒業しないで下さい…」——全场最催泪的一幕。'},
     {ep:'剧场版', t:'伦敦·天使之歌', d:'收到四位前辈写的「天使にふれたよ!」，抱着歌纸哭成泪人。'}
   ],
-  instrument:{ model:'Fender Mustang（ムスタング）MG69', love:'（爱称待核实）', detail:'コンパクトなムスタング。短いスケールで梓の小さな手にフィット。アニメでは白とサンバーストの個体が登場。', strings:'（琴弦型号待核实）', story:'梓的吉他是全团唯一「后辈款」短琴颈型号，和前辈们的琴形成鲜明对比。' },
-  charSongs:['azusa-letsgo','azusa-comewithme','azusa-starlight','azusa-joyful','azusa-genius'],
+  instrument:{ model:'Fender Mustang（ムスタング）MG69', love:'（爱称なし）', detail:'コンパクトなムスタング。短いスケールで梓の小さな手にフィット。アニメでは白とサンバーストの個体が登場。', strings:'D\'Addario EXL110 Nickel Wound（.010-.046）', story:'梓的吉他是全团唯一「后辈款」短琴颈型号，和前辈们的琴形成鲜明对比。' },
+  charSongs:['azusa-letsgo','azusa-comewithme','azusa-starlight','azusa-joyful'],
   cp:[
     {who:'yui', t:'梓×唯（あずにゃん vs 吉他笨蛋）', d:'唯对梓的「骚扰」是全作最大笑点之一；梓嘴上嫌弃，毕业时哭得最凶。'},
     {who:'ui', t:'梓×憂（同年好闺蜜）', d:'同班好友，憂是唯一能管住梓、也让梓放下戒备的人。'},
@@ -911,7 +941,7 @@ const CHARACTERS = [
   personality:['稳重可靠，是大家的「班级大脑」','吐槽唯的日常是保留节目','关键时刻（文化祭、毕业）总会出手帮忙'],
   growth:[
     {t:'高一', d:'和唯同班，默默吐槽唯的冒失；文化祭时为轻音部打下手。'},
-    {t:'高二', d:'和澪同班（待核实），继续当轻音部的编外后勤。'},
+    {t:'高二', d:'担任学生会会长，继续当轻音部的编外后勤。'},
     {t:'高三', d:'毕业前和轻音部一起拍纪念照，是五人之外最重要的见证者。'}
   ],
   quotes:[
@@ -949,7 +979,7 @@ const CHARACTERS = [
     {ep:'S2#10', t:'真物展示', d:'被学生们要求「来真的」，当场变身狂暴主唱，唱到青筋暴起。'},
     {ep:'S2#20', t:'HTT 命名', d:'（#11）为乐队定名「放課後ティータイム」，成为五人永远的番号。'}
   ],
-  instrument:{ model:'Gibson SG（DEATH DEVIL 时代）', love:'—', detail:'重金属演出用 SG 型吉他，和她的「黑历史」一起封存在柜子里。', strings:'（待核实）', story:'さわ子教唯练琴、帮 HTT 做演出服、调音台，是全团隐藏的最强乐手。' },
+  instrument:{ model:'Gibson SG（DEATH DEVIL 时代）', love:'—', detail:'重金属演出用 SG 型吉他，和她的「黑历史」一起封存在柜子里。', strings:'D\'Addario EXL110', story:'さわ子教唯练琴、帮 HTT 做演出服、调音台，是全团隐藏的最强乐手。' },
   charSongs:['maddy','hell','genom'],
   cp:[
     {who:'htc', t:'さわ子×HTT（师生羁绊）', d:'嘴上说是顾问，实际把五人当女儿养；毕业时哭得比谁都凶。'}
@@ -1210,60 +1240,58 @@ S('genius','Genius…!?','天才…!?','Genius…!?','放課後ティータイ�
  {ly:'大森祥子',comp:'前澤寛之',arr:'小森茂生',rel:'2010-04-28',album:'OP1单曲 c/w',ep:'—',tempo:150,mood:'元气'}),
 /* ---- 角色歌 ---- */
 S('yui-giita','ギー太に首ったけ','迷上吉太','Gīta ni Kubittake','平沢唯','chara',240,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2009',album:'「けいおん!」キャラクターイメージソング 第一弾',ep:'角色歌',tempo:130,mood:'可爱',chars:['yui'],
+  {ly:'大森祥子',comp:'Tom-H@ck',arr:'Tom-H@ck',rel:'2009-06-17',album:'「けいおん!」キャラクターイメージソング 第一弾',ep:'角色歌',tempo:130,mood:'可爱',chars:['yui'],
   lyrics:[]}),
 S('yui-sunday','Sunday Siesta','周日午睡','Sunday Siesta','平沢唯','chara',238,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2009',album:'「けいおん!」キャラクターイメージソング 第一弾',ep:'角色歌',tempo:92,mood:'慵懒',chars:['yui']}),
+  {ly:'大森祥子',comp:'百石元',arr:'百石元',rel:'2009-06-17',album:'「けいおん!」キャラクターイメージソング 第一弾',ep:'角色歌',tempo:92,mood:'慵懒',chars:['yui']}),
 S('yui-ohmy','Oh Myギー太!!','哦我的吉太!!','Oh My Gīta!!','平沢唯','chara',245,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2010-09-21',album:'「けいおん!!」イメージソング 第一弾',ep:'角色歌',tempo:150,mood:'元气',chars:['yui']}),
+  {ly:'大森祥子',comp:'Tom-H@ck',arr:'Tom-H@ck',rel:'2010-09-21',album:'「けいおん!!」イメージソング 第一弾',ep:'角色歌',tempo:150,mood:'元气',chars:['yui']}),
 S('yui-shiawase','しあわせ日和','幸福好天气','Shiawase Biyori','平沢唯','chara',252,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2010-09-21',album:'「けいおん!!」イメージソング 第一弾',ep:'角色歌',tempo:118,mood:'治愈',chars:['yui']}),
+  {ly:'大森祥子',comp:'前澤寛之',arr:'百石元',rel:'2010-09-21',album:'「けいおん!!」イメージソング 第一弾',ep:'角色歌',tempo:118,mood:'治愈',chars:['yui']}),
 S('yui-comewithme','Come with Me!!（唯Ver.）','跟我来吧!!（唯Ver.）','Come with Me!! (Yui Ver.)','平沢唯','chara',248,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2010-09-21',album:'イメージソング シリーズ',ep:'角色歌（ライブテーマ曲のソロ版）',tempo:150,mood:'闪耀',chars:['yui']}),
+  {ly:'hotaru',comp:'小森茂生',arr:'小森茂生',rel:'2010-09-21',album:'「けいおん!!」イメージソング 第一弾',ep:'角色歌（ライブテーマ曲のソロ版）',tempo:150,mood:'闪耀',chars:['yui']}),
 S('letsgo','『レッツゴー』','《LET\'S GO》','\'LET\'S GO\'','放課後ティータイム（唯メイン）','chara',251,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2010',album:'ライブテーマ曲',ep:'ライブイベント 〜レッツゴー!〜 主題曲',tempo:155,mood:'元气',chars:['yui']}),
+  {ly:'KANATA',comp:'Tom-H@ck',arr:'Tom-H@ck',rel:'2009-06-17',album:'ライブイベント 〜レッツゴー!〜 主題歌',ep:'ライブイベント 〜レッツゴー!〜 主題曲',tempo:155,mood:'元气',chars:['yui']}),
 S('mio-heart','Heart Goes Boom!!','心儿怦怦!!','Heart Goes Boom!!','秋山澪','chara',242,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2009',album:'「けいおん!」キャラクターイメージソング 第二弾',ep:'角色歌',tempo:140,mood:'俏皮',chars:['mio']}),
+  {ly:'大森祥子',comp:'前澤寛之',arr:'前澤寛之',rel:'2009-06-17',album:'「けいおん!」キャラクターイメージソング 第二弾',ep:'角色歌',tempo:140,mood:'俏皮',chars:['mio']}),
 S('mio-seishun','青春Vibration','青春振动','Seishun Vibration','秋山澪','chara',246,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2010-09-21',album:'「けいおん!!」イメージソング 第二弾',ep:'角色歌',tempo:148,mood:'青春',chars:['mio']}),
+  {ly:'大森祥子',comp:'前澤寛之',arr:'前澤寛之',rel:'2010-09-21',album:'「けいおん!!」イメージソング 第二弾',ep:'角色歌',tempo:148,mood:'青春',chars:['mio']}),
 S('mio-sora','蒼空のモノローグ','苍穹独白','Sōkū no Monorōgu','秋山澪','chara',255,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2010-09-21',album:'「けいおん!!」イメージソング 第二弾',ep:'角色歌',tempo:102,mood:'抒情',chars:['mio']}),
+  {ly:'大森祥子',comp:'前澤寛之',arr:'小森茂生',rel:'2010-09-21',album:'「けいおん!!」イメージソング 第二弾',ep:'角色歌',tempo:102,mood:'抒情',chars:['mio']}),
 S('mio-comewithme','Come with Me!!（澪Ver.）','跟我来吧!!（澪Ver.）','Come with Me!! (Mio Ver.)','秋山澪','chara',248,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2010-09-21',album:'イメージソング シリーズ',ep:'角色歌',tempo:150,mood:'闪耀',chars:['mio']}),
+  {ly:'hotaru',comp:'小森茂生',arr:'小森茂生',rel:'2010-09-21',album:'「けいおん!!」イメージソング 第二弾',ep:'角色歌',tempo:150,mood:'闪耀',chars:['mio']}),
 S('ritsu-drumming','Drumming Shining My Life','鼓点闪耀我的人生','Drumming Shining My Life','田井中律','chara',250,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2010-11-17',album:'「けいおん!!」イメージソング 第三弾',ep:'角色歌',tempo:160,mood:'燃',chars:['ritsu']}),
+  {ly:'大森祥子',comp:'Tom-H@ck',arr:'Tom-H@ck',rel:'2010-11-17',album:'「けいおん!!」イメージソング 第三弾',ep:'角色歌',tempo:160,mood:'燃',chars:['ritsu']}),
 S('ritsu-yuzora','夕空ア・ラ・カルト','夕空套餐','Yūzora A Ra Karuto','田井中律','chara',243,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2010-11-17',album:'「けいおん!!」イメージソング 第三弾',ep:'角色歌',tempo:118,mood:'温暖',chars:['ritsu']}),
+  {ly:'大森祥子',comp:'小森茂生',arr:'小森茂生',rel:'2010-11-17',album:'「けいおん!!」イメージソング 第三弾',ep:'角色歌',tempo:118,mood:'温暖',chars:['ritsu']}),
 S('ritsu-comewithme','Come with Me!!（律Ver.）','跟我来吧!!（律Ver.）','Come with Me!! (Ritsu Ver.)','田井中律','chara',248,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2010-11-17',album:'イメージソング シリーズ',ep:'角色歌',tempo:150,mood:'闪耀',chars:['ritsu']}),
+  {ly:'hotaru',comp:'小森茂生',arr:'小森茂生',rel:'2010-11-17',album:'「けいおん!!」イメージソング 第三弾',ep:'角色歌',tempo:150,mood:'闪耀',chars:['ritsu']}),
 S('tsumugi-diary','Diaryはフォルテシモ','日记是强音','Diary wa Fortissimo','琴吹紬','chara',254,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2010-11-17',album:'「けいおん!!」イメージソング 第四弾',ep:'角色歌',tempo:126,mood:'优雅',chars:['tsumugi']}),
+  {ly:'大森祥子',comp:'川口進',arr:'Tom-H@ck',rel:'2010-11-17',album:'「けいおん!!」イメージソング 第四弾',ep:'角色歌',tempo:126,mood:'优雅',chars:['tsumugi']}),
 S('tsumugi-yasei','野性の情熱','野性的热情','Yasei no Jōnetsu','琴吹紬','chara',247,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2010-11-17',album:'「けいおん!!」イメージソング 第四弾',ep:'角色歌',tempo:150,mood:'燃',chars:['tsumugi']}),
+  {ly:'大森祥子',comp:'小森茂生',arr:'小森茂生',rel:'2010-11-17',album:'「けいおん!!」イメージソング 第四弾',ep:'角色歌',tempo:150,mood:'燃',chars:['tsumugi']}),
 S('tsumugi-comewithme','Come with Me!（紬Ver.）','跟我来吧!（紬Ver.）','Come with Me! (Tsumugi Ver.)','琴吹紬','chara',248,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2010-11-17',album:'イメージソング シリーズ',ep:'角色歌',tempo:150,mood:'闪耀',chars:['tsumugi']}),
+  {ly:'hotaru',comp:'小森茂生',arr:'小森茂生',rel:'2010-11-17',album:'「けいおん!!」イメージソング 第四弾',ep:'角色歌',tempo:150,mood:'闪耀',chars:['tsumugi']}),
 S('azusa-letsgo','『レッツゴー』（梓Ver.）','《LET\'S GO》（梓Ver.）','\'LET\'S GO\' (Azusa Ver.)','中野梓','chara',251,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2011',album:'「けいおん!!」イメージソング 第五弾',ep:'角色歌',tempo:155,mood:'元气',chars:['azusa']}),
+  {ly:'KANATA',comp:'Tom-H@ck',arr:'Tom-H@ck',rel:'2009-08-26',album:'「けいおん!」キャラクターイメージソング 第五弾',ep:'角色歌',tempo:155,mood:'元气',chars:['azusa']}),
 S('azusa-comewithme','Come with Me!!（梓Ver.）','跟我来吧!!（梓Ver.）','Come with Me!! (Azusa Ver.)','中野梓','chara',248,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2011',album:'イメージソング シリーズ',ep:'角色歌',tempo:150,mood:'闪耀',chars:['azusa']}),
+  {ly:'hotaru',comp:'小森茂生',arr:'小森茂生',rel:'2010-11-17',album:'「けいおん!!」イメージソング 第五弾',ep:'角色歌',tempo:150,mood:'闪耀',chars:['azusa']}),
 S('azusa-starlight','Over the Starlight','越过星光','Over the Starlight','中野梓','chara',249,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2011',album:'「けいおん!!」イメージソング 第五弾',ep:'角色歌',tempo:120,mood:'抒情',chars:['azusa']}),
+  {ly:'大森祥子',comp:'Tom-H@ck',arr:'Tom-H@ck',rel:'2010-11-17',album:'「けいおん!!」イメージソング 第五弾',ep:'角色歌',tempo:120,mood:'抒情',chars:['azusa']}),
 S('azusa-joyful','Joyful Todays','欢乐今日','Joyful Todays','中野梓','chara',190,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2011',album:'「けいおん!!」イメージソング 第五弾',ep:'角色歌',tempo:136,mood:'轻快',chars:['azusa']}),
-S('azusa-genius','Genius…!?（梓Ver.待核实）','天才…!?','Genius…!?','中野梓','chara',222,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2011',album:'イメージソング シリーズ',ep:'角色歌',tempo:150,mood:'元气',chars:['azusa']}),
+  {ly:'大森祥子',comp:'Tom-H@ck',arr:'Tom-H@ck',rel:'2010-11-17',album:'「けいおん!!」イメージソング 第五弾',ep:'角色歌',tempo:136,mood:'轻快',chars:['azusa']}),
 S('ui-comewithme','Come with Me!!（憂Ver.）','跟我来吧!!（憂Ver.）','Come with Me!! (Ui Ver.)','平沢憂','chara',248,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2011',album:'イメージソング シリーズ',ep:'角色歌',tempo:150,mood:'闪耀',chars:['ui']}),
+  {ly:'hotaru',comp:'小森茂生',arr:'小森茂生',rel:'2010-10-27',album:'「けいおん!!」イメージソング 平沢憂',ep:'角色歌',tempo:150,mood:'闪耀',chars:['ui']}),
 S('jun-junjou','純情Bomber!!','纯情轰炸!!','Junjō Bomber!!','鈴木純','chara',246,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2011',album:'「けいおん!!」イメージソング シリーズ',ep:'角色歌',tempo:158,mood:'元气',chars:['jun']}),
+  {ly:'大森祥子',comp:'小森茂生',arr:'小森茂生',rel:'2011-01-19',album:'「けいおん!!」イメージソング 鈴木純',ep:'角色歌',tempo:158,mood:'元气',chars:['jun']}),
 S('jun-midnight','Midnight スーパースター','午夜超级明星','Midnight Sūpāsutā','鈴木純','chara',252,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2011',album:'「けいおん!!」イメージソング シリーズ',ep:'角色歌',tempo:112,mood:'夜风',chars:['jun']}),
+  {ly:'大森祥子',comp:'Tom-H@ck',arr:'Tom-H@ck',rel:'2011-01-19',album:'「けいおん!!」イメージソング 鈴木純',ep:'角色歌',tempo:112,mood:'夜风',chars:['jun']}),
 S('nodoka-comewithme','Come with Me!!（和Ver.）','跟我来吧!!（和Ver.）','Come with Me!! (Nodoka Ver.)','真鍋和','chara',248,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2011',album:'イメージソング シリーズ',ep:'角色歌',tempo:150,mood:'闪耀',chars:['nodoka']}),
+  {ly:'hotaru',comp:'小森茂生',arr:'小森茂生',rel:'2011-02-16',album:'「けいおん!!」イメージソング 真鍋和',ep:'角色歌',tempo:150,mood:'闪耀',chars:['nodoka']}),
 S('megumi-comewithme','Come with Me!!（恵Ver.）','跟我来吧!!（惠Ver.）','Come with Me!! (Megumi Ver.)','曽我部恵','chara',248,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2011',album:'イメージソング シリーズ',ep:'角色歌',tempo:150,mood:'闪耀',chars:['megumi']}),
+  {ly:'hotaru',comp:'小森茂生',arr:'小森茂生',rel:'2011-02-16',album:'「けいおん!!」イメージソング 曽我部恵',ep:'角色歌',tempo:150,mood:'闪耀',chars:['megumi']}),
 S('sawako-comewithme','Come with Me!!（さわ子Ver.）','跟我来吧!!（佐和子Ver.）','Come with Me!! (Sawako Ver.)','山中さわ子','chara',248,
- {ly:'待补充',comp:'待补充',arr:'待补充',rel:'2011',album:'イメージソング シリーズ',ep:'角色歌',tempo:150,mood:'闪耀',chars:['sawako']}),
+  {ly:'hotaru',comp:'小森茂生',arr:'小森茂生',rel:'2011-02-16',album:'「けいおん!!」イメージソング 山中さわ子',ep:'角色歌',tempo:150,mood:'闪耀',chars:['sawako']}),
 /* ---- 原声 OST ---- */
 S('ost1','K-ON! ORIGINAL SOUND TRACK Vol.1','轻音原声带 Vol.1','K-ON! OST Vol.1','百石元','ost',3600,
  {ly:'—',comp:'百石元',arr:'百石元',rel:'2010-07-21',album:'OST Vol.1（全20曲）',ep:'第二季 BGM',tempo:80,mood:'日常',
@@ -1272,7 +1300,7 @@ S('ost2','K-ON! ORIGINAL SOUND TRACK Vol.2','轻音原声带 Vol.2','K-ON! OST V
  {ly:'—',comp:'百石元',arr:'百石元',rel:'2010-10-06',album:'OST Vol.2（全20曲）',ep:'第二季 BGM',mood:'日常',
   lyricNote:'纯音乐原声带，曲目列表待补充（作曲：百石元）'}),
 S('ost-movie','映画「けいおん!」オリジナルサウンドトラック','剧场版原声带','K-ON! Movie OST','百石元','ost',3600,
- {ly:'—',comp:'百石元',arr:'百石元',rel:'2011-12-21（待核实）',album:'剧场版OST',ep:'剧场版 BGM',mood:'日常',
+ {ly:'—',comp:'百石元',arr:'百石元',rel:'2012-01-18',album:'剧场版OST',ep:'剧场版 BGM',mood:'日常',
   lyricNote:'纯音乐原声带，曲目列表待补充（作曲：百石元）'}),
 /* ---- 剧场版音乐（追加入口） ---- */
 S('movie-op','いちばんいっぱい（劇場版OP）','最最满足（剧场版OP）','Ichiban Ippai (Movie OP)','放課後ティータイム','movie',222,
@@ -1298,7 +1326,7 @@ S('k-donsaylazy','Don\'t say "lazy"（Inst.）','别说懒惰（伴奏）','Don\
  {ly:'—',comp:'前澤寛之',arr:'小森茂生',rel:'2009-04-22',album:'伴奏分轨',ep:'—',tempo:96,mood:'酷飒'}),
 /* ---- 演唱会现场 ---- */
 S('live-letsgo','けいおん! ライブイベント 〜レッツゴー!〜','轻音演唱会 〜LET\'S GO!〜','K-ON! Live Event ~LET\'S GO!~','放課後ティータイム','live',5400,
- {ly:'—',comp:'—',arr:'—',rel:'2010（BD/DVD 待核实）',album:'演唱会实况',ep:'2010年 首次大型演唱会',tempo:150,mood:'现场',lyricNote:'LIVE 音源合集（待补充）'}),
+ {ly:'—',comp:'—',arr:'—',rel:'2010-06-30（ライブイベント 〜レッツゴー!〜）',album:'演唱会实况',ep:'2010年 首次大型演唱会',tempo:150,mood:'现场',lyricNote:'LIVE CD 音源合集（PCCG-01128）'}),
 S('live-comewithme','けいおん!! ライブイベント 〜Come with Me!!〜','轻音演唱会 〜Come with Me!!〜','K-ON!! Live ~Come with Me!!~','放課後ティータイム','live',7200,
  {ly:'—',comp:'—',arr:'—',rel:'2011-08-03（BD）',album:'演唱会实况',ep:'2011年 横滨Arena 大型演唱会',mood:'现场',lyricNote:'LIVE 音源合集（待补充）'}),
 S('live-fuwafuwa','ふわふわ時間（LIVE）','轻飘飘时间（现场）','Fuwa Fuwa (LIVE)','放課後ティータイム','live',250,
@@ -1610,8 +1638,8 @@ function songCard(s){
 /* 角色小卡片 */
 function charCard(c){
   const av = MEDIA[c.id]
-    ? '<img src="'+MEDIA[c.id]+'" alt="'+esc(c.nameZh)+'" loading="lazy" class="w-14 h-14 rounded-full object-cover shrink-0" style="border:2px solid '+c.color+'55">'
-    : '<div class="w-14 h-14 rounded-full shrink-0 flex items-center justify-center text-xl" style="background:'+c.color+'22;color:'+c.color+';border:2px solid '+c.color+'55"><span style="font-weight:900">'+esc(c.nameZh[0])+'</span></div>';
+    ? '<img src="'+MEDIA[c.id]+'" alt="'+esc(c.nameZh)+' 头像" loading="lazy" class="w-14 h-14 rounded-2xl object-cover shrink-0" style="border:2px solid '+c.color+'55;background:'+c.color+'18">'
+    : '<div class="w-14 h-14 rounded-2xl shrink-0 flex items-center justify-center text-xl" style="background:'+c.color+'22;color:'+c.color+';border:2px solid '+c.color+'55"><span style="font-weight:900">'+esc(c.nameZh[0])+'</span></div>';
   return '<a data-route="/character/'+c.id+'" class="kcard p-4 flex items-center gap-3 cursor-pointer" role="link">'
    +cornerIc(c.icon, c.color)
    +av
@@ -1620,6 +1648,21 @@ function charCard(c){
    +'<span class="text-sakura2 ml-auto">'+ICONS.chevron+'</span></a>';
 }
 ICONS.chevron='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 5l7 7-7 7"/></svg>';
+
+/* ===== 本站运营时长（建站日期改这里；月份 0 起算，10月=9） ===== */
+const SITE_BIRTH = new Date(2026, 9, 7); /* 建站于 2026-10-07 */
+function siteAgeText(){
+  const now = new Date();
+  let y = now.getFullYear()-SITE_BIRTH.getFullYear();
+  let m = now.getMonth()-SITE_BIRTH.getMonth();
+  let d = now.getDate()-SITE_BIRTH.getDate();
+  /* 日不够减：向月借 1 个月，补上「上一个月」的天数 */
+  if(d < 0){ m--; d += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+  /* 月不够减：向年借 1 年 */
+  if(m < 0){ y--; m += 12; }
+  return '本站已运营 <span class="text-berry font-bold">'+y+'</span> 年 <span class="text-berry font-bold">'+m
+       +'</span> 个月 <span class="text-berry font-bold">'+d+'</span> 天';
+}
 
 /* 页脚（非盈利声明等） */
 function renderFooter(){
@@ -1638,6 +1681,7 @@ function renderFooter(){
   +'<li>试听缺失或加载失败时自动回退 WebAudio 合成演示音</li>'
   +'<li>歌词节选以官方歌词本为准，完整版待补充</li>'
   +'<li>数据核对时间：2026-10；发现错误欢迎反馈</li></ul></div></div>'
+  +'<div class="text-center text-xs text-[var(--txt-2)] py-3">'+siteAgeText()+'<span class="ml-2 opacity-70">（建站于 2026-10-07）</span></div>'
   +'<div class="text-center text-xs text-[var(--txt-2)] py-6 border-t border-[var(--line)]">'
   +'けいおんぶ！！ 本网站为粉丝创作，非官方 · ©かきふらい・芳文社／桜高軽音部</div>';
 }
@@ -2322,7 +2366,7 @@ function viewHome(){
   /* 整张图可点击，直接进入对应文章 */
   const slideHtml = slides.map((s,i)=>{
     const open = '<div class="slide cursor-pointer" data-route="/article/'+s.key+'" role="link" tabindex="0" aria-label="阅读文章：'+esc(s.zh)+'">';
-    if(MEDIA[s.key]) return open+'<div class="banner-ph">'+ph(s.key,'','banner',{ic:s.ic})+'</div>'+caption(s)+'</div>';
+    if(MEDIA[s.key]) return open+'<div class="banner-ph">'+ph(s.key,'','banner',{ic:s.ic,eager:true})+'</div>'+caption(s)+'</div>';
     return open+'<div class="banner-ph" style="background:'+s.g+'">'
       +'<div class="ph-inner flex items-center justify-center" style="color:rgba(93,78,55,.55)"><div style="text-align:center">'
       +'<div style="width:84px;margin:0 auto;opacity:.8">'+ICONS[s.ic]+'</div>'
@@ -2350,7 +2394,6 @@ function viewHome(){
     {d:'2026-10-07', t:'v1.0 上线', s:'全站 8 大模块完成；音乐中心收录 80+ 曲目，五种播放模式上线。'},
     {d:'2026-10-07', t:'音乐播放器', s:'全局不中断播放器：47 首接入 iTunes 官方30秒试听，缺失自动回退合成演示音。'},
     {d:'2026-10-07', t:'角色与功能更新', s:'新增角色生日提醒、打call应援器、歌词导入功能；4 位占位角色替换为真实角色（斉藤菫・佐久間紫・若王子いちご・佐藤莉子）。'},
-    {d:'2026-10-08', t:'待办', s:'31 首角色歌的制作名单（作词/作曲/编曲）待核实；图片/音频真实资源替换。'}
   ];
 
   return `
@@ -2459,7 +2502,11 @@ function dailyPick(){
   const now = new Date(), seed = now.getFullYear()*10000+(now.getMonth()+1)*100+now.getDate();
   const rnd = n => { let x = seed % 97; return (x*31+n*17)%97; };
   const song = SONGS[rnd(3) % SONGS.length];
-  const qs = CHARACTERS.reduce((a,c)=>a.concat(c.quotes.map(q=>({q,who:c.nameZh}))),[]);
+  const qs = CHARACTERS.reduce((a,c)=>a.concat(
+    c.quotes
+      .filter(q => !/待补充|待核实|欢迎补充|待补充/.test((q.ja||'')+(q.zh||'')))
+      .map(q=>({q,who:c.nameZh}))
+  ),[]);
   const q = qs.length ? qs[rnd(7)%qs.length] : {q:{ja:'（台词待补充）',zh:'',who:'',ep:''},who:''};
   return {song, quote:Object.assign({}, q.q, {who: q.who||q.q.who})};
 }
@@ -2545,10 +2592,11 @@ function viewCharacter(id){
   <button class="btn btn-ghost px-4 py-1.5 text-sm mb-5" data-route="/characters">← 返回角色列表</button>
   <div class="kcard overflow-visible p-0">
     <div class="md:flex">
-      <!-- 立绘占位 -->
+      <!-- 立绘（原图整幅显示，不裁切；替换为真实立绘：在 CHAR_SRC.${c.id} 填入URL） -->
       <div class="md:w-64 shrink-0 relative">
-        <div class="h-80 md:h-full" style="background:linear-gradient(160deg,${c.color}33,#FFF8E7)">${ph(c.id,'','<br>角色立绘（3:4）',{ic:c.icon})}</div>
-        <!-- 替换为真实立绘：在 MEDIA.${c.id} 填入URL -->
+        <div class="h-80 md:h-full" style="background:linear-gradient(160deg,${c.color}33,#FFF8E7)">${CHAR_SRC[c.id]
+          ? '<img src="'+CHAR_SRC[c.id]+'" alt="'+esc(c.nameZh)+' 立绘" class="w-full h-full" style="object-fit:contain;object-position:center top">'
+          : ph(c.id,'','<br>角色立绘（3:4）',{ic:c.icon})}</div>
       </div>
       <!-- 基础信息卡 -->
       <div class="flex-1 p-6">
@@ -2631,10 +2679,16 @@ function viewCharacter(id){
   ${c.cp.length?`
   <section class="mt-8">
     <h2 class="font-display text-xl text-cocoa dark:text-cream">相关 CP 与互动</h2>${noteDivider()}
-    <div class="grid md:grid-cols-3 gap-4">${c.cp.map(p=>`
+    <div class="grid md:grid-cols-3 gap-4">${c.cp.map(p=>{
+      /* who 既可以是角色 id，也可以是分组 id（如 htc=放学后茶会），两种都要能显示 */
+      const who = CHAR_MAP[p.who];
+      const grp = CHAR_CATS.find(g=>g.id===p.who);
+      const tag = who ? esc(who.nameZh+'・'+who.nameJp) : (grp ? esc(grp.name) : esc(p.who));
+      const pill = who ? 'pill-pink' : 'pill-mizu';
+      return `
       <div class="kcard p-4">${cornerIc('heart','#FF6B8A')}
-        <div class="flex items-center gap-2 mb-2"><span class="pill pill-pink">${esc(p.who)}</span></div>
-        <div class="font-bold text-sm">${esc(p.t)}</div><div class="text-xs text-[var(--txt-2)] mt-1">${esc(p.d)}</div></div>`).join('')}</div>
+        <div class="flex items-center gap-2 mb-2"><span class="pill ${pill}">${tag}</span></div>
+        <div class="font-bold text-sm">${esc(p.t)}</div><div class="text-xs text-[var(--txt-2)] mt-1">${esc(p.d)}</div></div>`; }).join('')}</div>
   </section>`:''}`;
 }
 
@@ -2702,9 +2756,13 @@ function viewEpisodesSeason(sid){
   </div>`;
 }
 function epRow(e){
-  return `<a data-route="/episode/${e.id}" class="kcard p-4 flex items-center gap-4 cursor-pointer" role="link">
-    ${cornerIc('play','#FFB7C5')}
-    <div class="w-12 h-12 rounded-xl flex items-center justify-center font-display text-lg shrink-0" style="background:rgba(255,183,197,.25);color:#E34E77">${e.season==='s1'?'1':''}${String(e.num).padStart(2,'0')}</div>
+  return `<a data-route="/episode/${e.id}" class="kcard p-3 flex items-center gap-4 cursor-pointer" role="link">
+    <div class="w-24 h-16 rounded-lg overflow-hidden shrink-0 relative">
+      <img src="${epImg(e)}" alt="${esc(e.tZh)} 封面" loading="lazy" class="absolute inset-0 w-full h-full object-cover">
+      <div class="absolute inset-0 flex items-center justify-center" style="background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.35))">
+        <span class="font-display text-sm text-white drop-shadow">${e.season==='s1'?'1':''}${String(e.num).padStart(2,'0')}</span>
+      </div>
+    </div>
     <div class="flex-1 min-w-0"><div class="font-bold truncate"><span class="font-jp">${esc(e.tJp)}</span> <span class="text-[var(--txt-2)] text-sm">${esc(e.tZh)}</span></div>
     <div class="text-[11px] text-[var(--txt-2)]">${esc(e.tEn)} · ${esc(e.air)} · 曲目 ${e.songs.length} 首</div></div>
     ${kindBadge(e.kind)}</a>`;
@@ -3013,7 +3071,7 @@ function viewSecrets(){
         <ul class="text-sm text-[var(--txt-2)] space-y-1.5">
           <li>· ギー太（唯的吉他）：由「ギター」+ 男性名「太」组合，唯把它当家人。</li>
           <li>· エリザベス（澪的贝斯）：澪给它起的洋气名字（来源待考）。</li>
-          <li>· ムータン（律的鼓组爱称，待核实）。</li>
+          <li>· ムータン（律的鼓组爱称，命名来源是「ムーン」+「たん」）。</li>
         </ul></div>
       <div class="kcard p-5"><div class="font-bold mb-2">其他设备</div>
         <p class="text-sm text-[var(--txt-2)]">音箱、效果器、调音台等设备在动画中均有写实刻画（具体型号待补充）；さわ子老师的 Gibson SG 与 DEATH DEVIL 时代装备也是考据重点。</p></div>
@@ -3224,7 +3282,8 @@ const Router = {
   render(route, fromPop){
     this.current = route;
     /* 更新地址栏 hash：正常导航入栈（支持前进后退）；popstate 回放不改历史 */
-    const hash = '#/'+route;
+    const cleanRoute = '/' + String(route).replace(/^\/+/, '');
+    const hash = '#/' + cleanRoute.replace(/^\/+/, '');
     if(location.hash !== hash){ if(fromPop) history.replaceState(null,'',hash); else history.pushState(null,'',hash); }
     const base = route.split('#')[0];
     let html='';
@@ -3445,13 +3504,37 @@ function initNav(){
   inp.addEventListener('input', ()=>{
     const kw=(inp.value||'').trim().toLowerCase();
     if(!kw){ res.innerHTML=''; return; }
-    const songs=SONGS.filter(s=>(s.t+' '+s.tZh+' '+s.ro+' '+s.unit).toLowerCase().includes(kw)).slice(0,6);
-    const chars=CHARACTERS.filter(c=>(c.nameZh+' '+c.nameJp+' '+c.romaji+' '+c.part).toLowerCase().includes(kw)).slice(0,5);
-    const eps=EPISODES.filter(e=>(e.tJp+' '+e.tZh+' '+e.tEn+' '+(e.syn||'')).toLowerCase().includes(kw)).slice(0,5);
+    /* 搜索覆盖全站六类内容：歌曲（含词曲作者/专辑）、角色（含台词）、集数、
+       专栏文章、图库、周边。命中越靠前（标题优先于正文）排序越前。 */
+    const hay=(s)=>String(s||'').toLowerCase();
+    const hit=(haystack, weight)=> hay(haystack).includes(kw) ? (weight||1) : 0;
+    const rank=(list, fields)=>{
+      const out=[];
+      list.forEach((item,i)=>{
+        let sc=0;
+        fields.forEach((f,fi)=>{ if(hit(f(item))) sc += (fi===0?100:fi===1?40:12); });
+        if(sc) out.push({item, sc, i});
+      });
+      return out.sort((a,b)=>b.sc-a.sc||a.i-b.i).map(x=>x.item);
+    };
+    const songs = rank(SONGS, [s=>s.t, s=>s.tZh+' '+s.ro, s=>s.unit+' '+(s.album||'')+' '+(s.credit?(s.credit.ly+' '+s.credit.comp+' '+s.credit.arr):'')]).slice(0,8);
+    const chars = rank(CHARACTERS, [c=>c.nameZh, c=>c.nameJp+' '+c.romaji+' '+c.nameZh.replace(/[\u4e00-\u9fa5]/g,'')+' '+c.en, c=>c.part+' '+c.cls+' '+c.seiyuu+' '+(c.quotes||[]).map(q=>q.ja+' '+q.zh).join(' ')]).slice(0,6);
+    const eps = rank(EPISODES, [e=>e.tZh, e=>e.tJp+' '+e.tEn, e=>(e.syn||'')+' '+(e.quotes||[]).map(q=>q.ja+q.zh).join(' ')]).slice(0,6);
+    const arts = rank(ARTICLES, [a=>a.title, a=>a.tag||'', a=>(Array.isArray(a.body)?a.body.join(' '):(a.body||''))+' '+(a.lead||'')]).slice(0,4);
+    const gals = GALLERY_CATS.map(cat=>({cat, items:galleryItems(cat.id)})).flatMap(({cat,items})=>
+      items.map((g,idx)=>({cat, idx, g}))
+    ).filter(({cat,g})=> hay(cat.name+' '+cat.desc+' '+(g&&g.charName||'')).includes(kw)).slice(0,6);
+    const goods = Object.entries(GOODS_DATA).flatMap(([k,arr])=>(arr||[]).map(it=>({k, it}))).filter(({it})=>hay(it.t+' '+it.d+' '+it.note).includes(kw)).slice(0,6);
+    const goodsTabName = {cd:'CD 专辑',figure:'手办模型',merch:'谷子周边',book:'杂志书籍',collab:'联动商品'};
+    const row = (route, main, sub, icon) => '<a data-route="'+route+'" data-search-item class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-warmgray/70 dark:hover:bg-[#4A3B31] cursor-pointer"><span class="text-sakura2">'+icon+'</span><span class="truncate">'+esc(main)+'</span><span class="text-[11px] text-[var(--txt-2)] ml-auto shrink-0">'+esc(sub)+'</span></a>';
+    const head = (t,n)=>'<div class="px-4 pt-3 text-[11px] font-bold text-sakura2">'+t+' <span class="text-[var(--txt-2)] font-normal">'+n+'</span></div>';
     let h='';
-    if(songs.length) h+='<div class="px-4 pt-3 text-[11px] font-bold text-sakura2">歌曲</div>'+songs.map(s=>'<a data-route="/song/'+s.id+'" class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-warmgray/70 dark:hover:bg-[#4A3B31] cursor-pointer"><span class="text-sakura2">♪</span>'+esc(s.t)+'<span class="text-[11px] text-[var(--txt-2)]">'+esc(s.unit)+'</span></a>').join('');
-    if(chars.length) h+='<div class="px-4 pt-3 text-[11px] font-bold text-sakura2">角色</div>'+chars.map(c=>'<a data-route="/character/'+c.id+'" class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-warmgray/70 dark:hover:bg-[#4A3B31] cursor-pointer">'+esc(c.nameZh)+'<span class="text-[11px] text-[var(--txt-2)]">'+esc(c.part)+'</span></a>').join('');
-    if(eps.length) h+='<div class="px-4 pt-3 text-[11px] font-bold text-sakura2">集数</div>'+eps.map(e=>'<a data-route="/episode/'+e.id+'" class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-warmgray/70 dark:hover:bg-[#4A3B31] cursor-pointer">'+esc(e.tJp)+'<span class="text-[11px] text-[var(--txt-2)]">'+esc(e.tZh)+'</span></a>').join('');
+    if(songs.length) h+=head('歌曲',songs.length)+songs.map(s=>row('/song/'+s.id, s.t, s.unit, '♪')).join('');
+    if(chars.length) h+=head('角色',chars.length)+chars.map(c=>row('/character/'+c.id, c.nameZh, c.part, '♫')).join('');
+    if(eps.length) h+=head('集数',eps.length)+eps.map(e=>row('/episode/'+e.id, e.tJp, e.tZh, '▶')).join('');
+    if(arts.length) h+=head('专栏',arts.length)+arts.map(a=>row('/article/'+a.id, a.title, a.tag||'文章', '✦')).join('');
+    if(gals.length) h+=head('图库',gals.length)+gals.map(({cat,idx,g})=>row('/gallery/'+cat.id, cat.name+' #'+(idx+1), (g&&g.charName)||cat.desc||'', '❖')).join('');
+    if(goods.length) h+=head('周边',goods.length)+goods.map(({k,it})=>row('/goods', it.t, goodsTabName[k]||'', '★')).join('');
     res.innerHTML = h || '<div class="px-4 py-6 text-sm text-[var(--txt-2)] text-center">没有找到相关结果，换个词试试。</div>';
   });
 
@@ -3575,16 +3658,36 @@ function openLyricModal(songId){
 function initKeyboard(){
   document.addEventListener('keydown', ev=>{
     const tag=(ev.target.tagName||'').toLowerCase();
-    if(tag==='input'||tag==='textarea'||tag==='select') return;
+    const typing = tag==='input'||tag==='textarea'||tag==='select'||ev.target.isContentEditable;
+    /* Esc：无论在不在输入框里都要能关掉搜索 / 弹窗 */
+    if(ev.key==='Escape'){
+      const ov=$('#search-ov');
+      if(ov.classList.contains('show')){ ov.classList.remove('show'); ev.preventDefault(); return; }
+      const mask=$('#modal-mask');
+      if(mask.classList.contains('show')){ GalleryLightbox.close(); Player.closeModal(); ev.preventDefault(); return; }
+      return;
+    }
+    /* 在输入框里打字时不劫持快捷键（否则搜歌时敲空格会误触播放） */
+    if(typing) return;
     if(ev.code==='Space'){ ev.preventDefault(); Player.toggle(); }
-    else if(ev.key==='ArrowRight'){ Player.next(); }
-    else if(ev.key==='ArrowLeft'){ Player.prev(); }
+    else if(ev.key==='ArrowRight'){ ev.preventDefault(); Player.next(); }
+    else if(ev.key==='ArrowLeft'){ ev.preventDefault(); Player.prev(); }
+    else if(ev.key==='ArrowUp'){ ev.preventDefault(); Player.setVolume(Player.volume+5); $('#p-volume').value=Player.volume; toast('音量 '+Player.volume+'%'); }
+    else if(ev.key==='ArrowDown'){ ev.preventDefault(); Player.setVolume(Player.volume-5); $('#p-volume').value=Player.volume; toast('音量 '+Player.volume+'%'); }
     else if(ev.key==='m'||ev.key==='M'){ Player.toggleMute(); }
+    /* "/" 唤起全站搜索（相当于搜索按钮） */
+    else if(ev.key==='/'||ev.code==='Slash'){ ev.preventDefault(); $('#search-btn').click(); }
   });
 }
 /* hash 前进后退 */
+function normRoute(hash){
+  const raw = String(hash||'#/').replace(/^#/, '');
+  const parts = raw.split('#');
+  const clean = '/' + parts[0].replace(/^\/+/, '');
+  return clean + (parts.length > 1 ? '#' + parts.slice(1).join('#') : '');
+}
 function initHash(){
-  window.addEventListener('popstate', ()=>{ Router.render((location.hash||'#/').slice(1)||'/', true); });
+  window.addEventListener('popstate', ()=>{ Router.render(normRoute(location.hash), true); });
 }
 
 /* ============================================================
@@ -3708,6 +3811,58 @@ const Player = {
   queue:[], idx:0, mode:'order', isPlaying:false,
   song:null, _audio:null, _synth:null, _virtual:0, _dur:0, _tick:null,
   _notesTimer:null, history:[], sleepUntil:0, deskMode:false, lockShuffle:false,
+  volume:22, _muted:false, _saveTick:0,
+
+  /* ---- 播放状态持久化：音量 / 模式 / 静音 / 悬浮歌词 / 上次播放到哪 ----
+     存 localStorage['kon-player']；进度只在每 5 秒与关键动作时写盘，避免每次 tick 都序列化 */
+  _save(force){
+    const now = Date.now();
+    if(!force && now - this._saveTick < 5000) return;
+    this._saveTick = now;
+    try{
+      localStorage.setItem('kon-player', JSON.stringify({
+        songId: this.song ? this.song.id : null,
+        pos: this._currentPos(),
+        volume: this.volume,
+        mode: this.mode,
+        muted: !!this._muted,
+        desk: !!this.deskMode,
+        queue: this.queue.map(s=>s.id).slice(0,60),
+        idx: this.idx,
+        history: this.history.slice(0,20)
+      }));
+    }catch(e){}
+  },
+  _currentPos(){
+    if(this._audio && !isNaN(this._audio.currentTime) && this._audio.currentTime>0) return this._audio.currentTime;
+    return this._virtual||0;
+  },
+  _restoreState(){
+    let d = null;
+    try{ d = JSON.parse(localStorage.getItem('kon-player')||'null'); }catch(e){ d=null; }
+    if(!d) return false;
+    if(typeof d.volume==='number') this.volume = Math.min(100, Math.max(0, d.volume));
+    if(d.mode && ['order','loop','single','random','smart'].includes(d.mode)) this.mode = d.mode;
+    this._muted = !!d.muted;
+    this.deskMode = !!d.desk;
+    if(Array.isArray(d.history)) this.history = d.history.filter(id=>SONG_MAP[id]).slice(0,20);
+    /* 队列能整体还原就还原，否则只还原那一首 */
+    const q = (d.queue||[]).map(id=>SONG_MAP[id]).filter(Boolean);
+    if(q.length > 1){
+      this.queue = q; this._origQueue = q.slice();
+      this.idx = Math.min(Math.max(0, d.idx|0), q.length-1);
+    }
+    const s = d.songId ? SONG_MAP[d.songId] : null;
+    if(s){
+      if(!this.queue.length){ this.queue=[s]; this._origQueue=[s]; this.idx=0; }
+      else if(this.queue[this.idx].id !== s.id){ this.idx = Math.max(0, this.queue.findIndex(x=>x.id===s.id)); }
+      this.song = s;
+      this._virtual = Math.max(0, +d.pos||0);
+      /* 标记「待续播」：只有这种情况才在点击播放时跳到存档位置 */
+      this._pendingResume = this._virtual>1 ? this._virtual : 0;
+    }
+    return true;
+  },
 
   /* 从列表开始播放（shuffle=true 时使用智能乱序） */
   playQueue(list, shuffle){
@@ -3722,7 +3877,7 @@ const Player = {
   playSong(song){
     const i = this.queue.findIndex(s=>s.id===song.id);
     if(i>=0){ this.idx=i; this._load(song); }
-    else { this.queue=[song]; this.idx=0; this._load(song); }
+    else { this._origQueue=[song]; this.queue=[song]; this.idx=0; this._load(song); }
   },
   /* 全曲库乱序 */
   shuffleAll(){
@@ -3737,7 +3892,16 @@ const Player = {
     if(!this.song){ const s = SONGS.find(x=>x.cat==='op') || SONGS[0]; this.playSong(s); return; }
     this.isPlaying = true;
     const el = $('#player'); el.classList.add('playing');
-    if(this._audio){ this._audio.play().catch(()=>toast('浏览器阻止了自动播放，请手动点击播放')); }
+    if(this._audio){
+      /* 从「上次播放」恢复时，音频元数据到位后跳到存档位置（只做一次） */
+      if(this._pendingResume>1){
+        const want=this._pendingResume;
+        const applySeek=()=>{ try{ if(this._audio && isFinite(this._audio.duration)) this._audio.currentTime=Math.min(want, Math.max(0,this._audio.duration-0.5)); }catch(e){} this._pendingResume=0; };
+        if(this._audio.readyState>=1) applySeek();
+        else this._audio.addEventListener('loadedmetadata', applySeek, {once:true});
+      }
+      this._audio.play().catch(()=>toast('浏览器阻止了自动播放，请手动点击播放'));
+    }
     else synthStart(this.song);
     this._startTick(); this._startNotes();
     this._render();
@@ -3748,12 +3912,16 @@ const Player = {
     if(this._audio) this._audio.pause();
     synthStop();
     this._stopTick(); this._stopNotes();
+    this._save(true);
     this._render();
   },
-  next(){
+  /* auto=true 表示「本曲自然播完，自动往下走」；手动点下一首 / 按 → 不传参。
+     两者在单曲循环下必须分开：自动播完要重播本曲，手动点下一首要真的换歌——
+     否则「单曲循环」下 ⏭ 按钮和 → 键会变成「重头播放」，而 ⏮ 却真的翻歌，两个方向行为不一致。 */
+  next(auto){
     if(!this.queue.length) return;
     const m = this.mode;
-    if(m==='single'){ this._load(this.queue[this.idx]); return; }
+    if(m==='single' && auto){ this._load(this.queue[this.idx]); return; }
     if(m==='random'){
       if(this.queue.length>1){ let n; do{ n=(Math.random()*this.queue.length)|0; }while(n===this.idx); this.idx=n; }
       this._load(this.queue[this.idx]); return;
@@ -3763,7 +3931,8 @@ const Player = {
       else { const list=smartShuffle(this._origQueue||this.queue, this.song?this.song.id:null); this.queue=list; this.idx=0; this._load(list[0]); }
       return;
     }
-    if(m==='loop'){ this.idx = (this.idx+1)%this.queue.length; this._load(this.queue[this.idx]); return; }
+    /* loop / single（手动）：队尾接回队首，和 prev() 的环形回绕保持对称 */
+    if(m==='loop'||m==='single'){ this.idx = (this.idx+1)%this.queue.length; this._load(this.queue[this.idx]); return; }
     /* order */
     if(this.idx < this.queue.length-1){ this.idx++; this._load(this.queue[this.idx]); }
     else this.pause();
@@ -3774,7 +3943,7 @@ const Player = {
       if(this.queue.length>1){ let n; do{ n=(Math.random()*this.queue.length)|0; }while(n===this.idx); this.idx=n; }
       this._load(this.queue[this.idx]); return;
     }
-    if(this.mode==='order'){ if(this.idx>0){ this.idx--; this._load(this.queue[this.idx]); } return; }
+    if(this.mode==='order'||this.mode==='smart'){ if(this.idx>0){ this.idx--; this._load(this.queue[this.idx]); } return; }
     this.idx = (this.idx-1+this.queue.length)%this.queue.length;
     this._load(this.queue[this.idx]);
   },
@@ -3782,32 +3951,40 @@ const Player = {
     const t = Math.max(0, +sec||0);
     if(this._audio && !isNaN(this._audio.duration)){ this._audio.currentTime = Math.min(t, this._audio.duration); }
     this._virtual = t;
+    this._save(true);
   },
   setVolume(v){
-    if(_masterGain) _masterGain.gain.value = (v/100)*0.32;
-    if(this._audio) this._audio.volume = (v/100)*0.45;
+    this.volume = Math.min(100, Math.max(0, +v||0));
+    if(_masterGain) _masterGain.gain.value = (this.volume/100)*0.32;
+    if(this._audio) this._audio.volume = (this.volume/100)*0.45;
+    this._save(true);
   },
   toggleMute(){
     this._muted = !this._muted;
-    if(_masterGain) _masterGain.gain.value = this._muted?0:((($('#p-volume').value||22)/100)*0.32);
+    if(_masterGain) _masterGain.gain.value = this._muted?0:((this.volume/100)*0.32);
+    if(this._audio) this._audio.muted = this._muted; /* 修复：真实试听音频也要静音 */
     $('#p-mute').innerHTML = (this._muted?ICONS.volmute:ICONS.vol).replace('<svg','<svg class="w-5 h-5"');
+    $('#p-mute').classList.toggle('on', this._muted);
+    this._save(true);
   },
   cycleMode(){
     const order=['order','loop','single','random','smart'];
     this.mode = order[(order.indexOf(this.mode)+1)%order.length];
     toast('播放模式：'+this.modeName());
+    this._save(true);
     this._render();
   },
   modeName(){
     return {order:'顺序播放',loop:'列表循环',single:'单曲循环',random:'完全随机',smart:'智能乱序（推荐）'}[this.mode];
   },
-  /* 载入歌曲 */
-  _load(song){
+  /* 载入歌曲；resumeSec 仅用于「恢复上次播放」时定位，正常点击播放不传 */
+  _load(song, resumeSec){
     this.pause();
     /* 释放上一首的真实音频对象，避免串音 */
     if(this._audio){ try{ this._audio.pause(); this._audio.removeAttribute('src'); this._audio.load(); }catch(e){} this._audio=null; }
     this.song = song;
     this._virtual = 0; this._dur = 0;
+    const resume = Math.max(0, +resumeSec||0);
     /* 历史记录（最近20首） */
     this.history = [song.id, ...this.history.filter(id=>id!==song.id)].slice(0,20);
     /* 音源优先级：song.audio 自填 > MEDIA.audio 映射 > PREVIEWS iTunes官方30秒试听 > 合成演示音 */
@@ -3816,11 +3993,13 @@ const Player = {
       this._audio = new Audio();
       this._audio.src = url;
       this._audio.preload = 'auto';
-      this._audio.volume = (($('#p-volume').value||22)/100)*0.45;
-      this._audio.onended = ()=>this.next();
-      this._audio.onloadedmetadata = ()=>{ if(this._audio && isFinite(this._audio.duration) && this._audio.duration>0){ this._dur = this._audio.duration; this._render(); } };
+      this._audio.volume = (this.volume/100)*0.45;
+      this._audio.muted = !!this._muted;
+      this._audio.onended = ()=>this.next(true);   /* 自动播完：单曲循环时重播本曲 */
+      this._audio.onloadedmetadata = ()=>{ if(this._audio && isFinite(this._audio.duration) && this._audio.duration>0){ this._dur = this._audio.duration; if(resume) this.seek(resume); this._render(); } };
       this._audio.onerror = ()=>{ toast('试听加载失败，已切换为演示合成音'); this._audio=null; if(this.song===song) synthStart(song); };
     }
+    if(resume) this._virtual = resume;
     this._render();
     this.play();
   },
@@ -3851,10 +4030,11 @@ const Player = {
       if(this._audio && !isNaN(this._audio.duration)) t = this._audio.currentTime;
       else { this._virtual += 0.5; t = this._virtual; }
       /* 真实音频/试听由 onended 触发切歌；仅合成演示音用虚拟进度自动切 */
-      if(!this._audio && t >= this.song.dur){ this.next(); return; }
+      if(!this._audio && t >= this.song.dur){ this.next(true); return; }
       $('#p-progress').value = Math.min(t, this._dur || this.song.dur);
       $('#p-cur').textContent = fmtD(t);
       this._highlightLyric(t);
+      this._save(); /* 节流：内部保证最多每 5 秒写一次盘 */
       /* 定时关闭 */
       if(this.sleepUntil && Date.now() >= this.sleepUntil){ this.sleepUntil=0; this.pause(); toast('定时关闭：播放已停止'); }
     }, 500);
@@ -3913,15 +4093,29 @@ const Player = {
   },
   renderPlaylists(){
     const host=$('#panel-playlists'); if(!host) return;
+    const favSongs = Playlists.favSongs();
     host.innerHTML = '<div class="flex gap-2 mb-3 flex-wrap">'
       +'<button class="btn btn-berry px-3 py-1.5 text-xs" data-action="new-playlist">新建歌单</button>'
       +'<button class="btn btn-ghost px-3 py-1.5 text-xs" data-action="export-playlists">导出</button>'
       +'<button class="btn btn-ghost px-3 py-1.5 text-xs" data-action="import-playlists">导入</button>'
       +'<input type="file" id="import-file" accept=".json" class="hidden">'
       +'<label class="btn btn-ghost px-3 py-1.5 text-xs" for="import-file" style="display:inline-flex">导入文件</label></div>'
+      /* 收藏独立成区：原来只有控制条上的心形按钮，收藏完没有地方能回看 */
+      +'<div class="kcard rounded-xl p-3 mb-3" style="background:rgba(255,183,197,.10)">'
+      +'<div class="flex items-center justify-between"><div class="font-bold text-sm text-[#F5E9DA]">'+ICONS.heartF.replace('<svg','<svg class="w-3.5 h-3.5 inline"')+' 我的收藏 <span class="text-[11px] text-[#C9BBA6]">'+favSongs.length+' 首</span></div>'
+      + (favSongs.length
+          ? '<div class="flex gap-1"><button class="text-[11px] text-[#FFB7C5] underline" data-action="play-favs">播放</button>'
+            +'<button class="text-[11px] text-[#FFB7C5] underline ml-2" data-action="shuffle-favs">乱序</button>'
+            +'<button class="text-[11px] text-[#C9BBA6] underline ml-2" data-action="del-favs">清空</button></div>'
+          : '')
+      +'</div>'
+      + (favSongs.length
+          ? '<div class="text-[11px] text-[#C9BBA6] mt-1.5 leading-relaxed">'+favSongs.slice(0,8).map(s=>esc(s.t)).join(' · ')+(favSongs.length>8?' 等':'')+'</div>'
+          : '<div class="text-[11px] text-[#C9BBA6] mt-1.5">还没有收藏。在歌曲详情页或播放器点心形按钮即可收藏。</div>')
+      +'</div>'
       + (Object.keys(Playlists.pl).length? Object.keys(Playlists.pl).map(name=>{
           const ids=Playlists.pl[name];
-          return `<div class="kcard! rounded-xl p-3 mb-2" style="background:rgba(255,255,255,.05)">
+          return `<div class="kcard rounded-xl p-3 mb-2" style="background:rgba(255,255,255,.05)">
             <div class="flex items-center justify-between"><div class="font-bold text-sm text-[#F5E9DA]">${esc(name)} <span class="text-[11px] text-[#C9BBA6]">${ids.length} 首</span></div>
             <div class="flex gap-1"><button class="text-[11px] text-[#FFB7C5] underline" data-action="play-pl" data-pl="${esc(name)}">播放</button>
             <button class="text-[11px] text-[#C9BBA6] underline ml-2" data-action="del-pl" data-pl="${esc(name)}">删除</button></div></div>
@@ -3976,6 +4170,14 @@ const Playlists = {
   },
   save(){ try{ localStorage.setItem('kon-playlists', JSON.stringify({pl:this.pl, favs:this.favs})); }catch(e){} },
   isFav(id){ return this.favs.includes(id); },
+  /* 收藏 id → 曲目对象（过滤掉已下架/改名的 id，避免出现空白行） */
+  favSongs(){ return this.favs.map(id=>SONG_MAP[id]).filter(Boolean); },
+  clearFavs(){
+    if(!this.favs.length) return;
+    if(confirm('清空全部收藏（'+this.favs.length+' 首）？')){
+      this.favs=[]; this.save(); Player._render(); toast('已清空收藏');
+    }
+  },
   toggleFav(id){
     if(this.isFav(id)) this.favs = this.favs.filter(x=>x!==id);
     else { this.favs.unshift(id); }
@@ -4051,7 +4253,7 @@ function initPlayerUI(){
     const h = ev.target.closest('[data-history]');
     if(h){ const s=SONG_MAP[h.getAttribute('data-history')]; if(s) Player.playSong(s); return; }
     const a = ev.target.closest('[data-action]');
-    if(a && ['restore-order','new-playlist','export-playlists','del-pl','play-pl','import-playlists'].includes(a.getAttribute('data-action'))){
+    if(a && ['restore-order','new-playlist','export-playlists','del-pl','play-pl','import-playlists','play-favs','shuffle-favs','del-favs'].includes(a.getAttribute('data-action'))){
       const act=a.getAttribute('data-action');
       if(act==='restore-order'){
         if(Player._origQueue && Player._origQueue.length){
@@ -4067,10 +4269,42 @@ function initPlayerUI(){
       else if(act==='del-pl') Playlists.delPlaylist(a.getAttribute('data-pl'));
       else if(act==='play-pl'){ const ids=Playlists.pl[a.getAttribute('data-pl')]||[]; Player.playQueue(ids.map(id=>SONG_MAP[id]).filter(Boolean), false); }
       else if(act==='import-playlists'){ $('#import-file').click(); }
+      else if(act==='play-favs'){
+        const list=Playlists.favSongs();
+        if(!list.length) toast('还没有收藏的歌曲');
+        else Player.playQueue(list, false);
+      }
+      else if(act==='shuffle-favs'){
+        const list=Playlists.favSongs();
+        if(!list.length) toast('还没有收藏的歌曲');
+        else { Player.playQueue(list, true); toast('收藏曲目乱序播放 ♪'); }
+      }
+      else if(act==='del-favs') Playlists.clearFavs();
       return;
     }
   });
   /* 导入文件绑定改在 renderPlaylists 中动态注入时完成（#import-file 为运行时生成） */
+}
+
+/* 把恢复出来的音量/静音/悬浮歌词同步到控制条 UI（init 阶段调用一次） */
+function initPlayerStateUI(){
+  const vol = $('#p-volume');
+  if(vol){ vol.value = Player.volume; }
+  Player.setVolume(Player.volume);
+  if(Player._muted){
+    $('#p-mute').innerHTML = ICONS.volmute.replace('<svg','<svg class="w-5 h-5"');
+    $('#p-mute').classList.add('on');
+  }
+  if(Player.deskMode){
+    $('#p-desk').classList.add('on');
+    Player._updateDeskLyric();
+  }
+  $('#p-mode').textContent = Player.modeName();
+  /* 从「上次播放」恢复时，进度条先显示存档位置（真实音频元数据到位后会再校准） */
+  if(Player.song && Player._virtual>0){
+    $('#p-progress').value = Player._virtual;
+    $('#p-cur').textContent = fmtD(Player._virtual);
+  }
 }
 /* ============================================================
    歌词存储 LyricStore
@@ -4230,6 +4464,13 @@ const GAMES = {
     app.onclick=ev=>{
       const p=ev.target.closest('[data-guess-play]');
       if(p){ if(!played){ playMelody(); played=true; } else { synthStop(); played=false; } return; }
+      /* 结束游戏（合并自独立监听器，避免重复绑定；保留当前难度） */
+      const eg=ev.target.closest('[data-action="end-guess"]');
+      if(eg){
+        synthStop();
+        app.innerHTML='<div class="kcard p-6 text-center"><div class="font-display text-xl">最终得分：'+score+'</div><p class="text-sm text-[var(--txt-2)] mt-2">'+gradeGuess(score)+'</p><button class="btn btn-berry px-6 py-2.5 text-sm mt-4" data-action="start-guess" data-diff="'+diff+'">再来一局</button></div>';
+        return;
+      }
       const o=ev.target.closest('[data-guess-opt]'); if(!o) return;
       synthStop();
       const ok = o.getAttribute('data-guess-opt')===target.id;
@@ -4243,10 +4484,6 @@ const GAMES = {
           <button class="btn btn-cream px-5 py-2 text-sm" data-action="end-guess">结束游戏（得分 ${score}）</button>
         </div></div>`;
     };
-    app.addEventListener('click', ev=>{
-      const end=ev.target.closest('[data-action="end-guess"]');
-      if(end){ app.innerHTML='<div class="kcard p-6 text-center"><div class="font-display text-xl">最终得分：'+score+'</div><p class="text-sm text-[var(--txt-2)] mt-2">'+gradeGuess(score)+'</p><button class="btn btn-berry px-6 py-2.5 text-sm mt-4" data-action="start-guess" data-diff="easy">再来一局</button></div>'; }
-    });
     render();
   },
 
@@ -4407,12 +4644,18 @@ function hideLoader(){
 function init(){
   Playlists.load();
   LyricStore.load();
+  /* 恢复上次的音量/模式/静音/悬浮歌词，并还原「上次播放到哪」——必须先于 Player._render() */
+  const hadSaved = Player._restoreState();
   initNav();
   initDelegation();
   initKeyboard();
   initHash();
   initPlayerUI();
+  initPlayerStateUI();
   Player._render();
+  /* 离开页面前落盘一次，避免最后几秒进度丢失 */
+  window.addEventListener('beforeunload', ()=>Player._save(true));
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') Player._save(true); });
   /* 注：initStatsCounter() 由 PostRender.init() 在首页渲染后调用——
      此处 #view 尚未渲染，[data-count] 还不存在，提前调用会静默失效 */
   /* 加载动画：onload 优先，兜底 1.6s */
@@ -4420,8 +4663,8 @@ function init(){
   else window.addEventListener('load', hideLoader);
   setTimeout(hideLoader, 1600);
   /* 首次路由（默认首页） */
-  Router.render((location.hash||'#/').slice(1)||'/');
-  /* 自动播放：尝试直接播放，浏览器阻止时等首次交互 */
+  Router.render(normRoute(location.hash));
+  /* 自动播放：有存档时改为「等你点一下继续」，不覆盖上次的进度 */
   setTimeout(()=>{
     const tryPlay = () => {
       try {
@@ -4429,8 +4672,15 @@ function init(){
         else Player.play();
       } catch(e){}
     };
+    if(hadSaved && Player.song){
+      const resumeSec = Player._virtual||0;
+      const s = Player.song;
+      Player._render();
+      toast('已恢复「'+s.t+'」'+(resumeSec>1?('，从 '+fmtD(resumeSec)+' 继续'):'')+'，点击播放继续收听 ♪');
+      return;
+    }
     tryPlay();
-    /* 500ms 后若仍未播放，显示轻量提示并等首次交互 */
+    /* 600ms 后若仍未播放，显示轻量提示并等首次交互 */
     setTimeout(()=>{
       if(!Player.isPlaying){
         toast('浏览器限制自动播放，点击页面任意位置即可开始音乐 ♪');
