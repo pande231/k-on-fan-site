@@ -13,6 +13,7 @@
 <script src="assets/vendor/tailwind-3.4.17.js"></script>
 <script>
 tailwind.config = {
+  darkMode: ['selector', '[data-theme="dark"]'],
   theme: {
     extend: {
       colors: {
@@ -25,8 +26,8 @@ tailwind.config = {
         matcha:  '#9DC08B',   // 抹茶绿
         lemon:   '#FFE599',   // 柠檬黄
         cocoa:   '#5D4E37',   // 深棕
-        warmgray:'#F5F0E6',   // 暖灰
-        clay:    '#D4C8B8',   // 浅棕灰
+        warmgray:'#FDF0F4',   // 暖灰（更可爱：由米黄 #F5F0E6 改为淡粉）
+        clay:    '#F7DCE4',   // 浅棕灰（更可爱：由 #D4C8B8 改为淡粉）
         ink:     '#4A4A4A',   // 深灰（正文）
         player:  '#3A2F27'    // 播放器深棕底
       },
@@ -52,7 +53,7 @@ tailwind.config = {
   --sakura:#FFB7C5; --sakura2:#FF8FAA; --tea:#8B7355; --cream:#FFF8E7;
   --mizu:#A8D8EA; --berry:#FF6B8A; --matcha:#9DC08B; --lemon:#FFE599;
   --cocoa:#5D4E37; --warm:#F5F0E6; --clay:#D4C8B8; --ink:#4A4A4A;
-  --player:#3A2F27;
+  --player:#4A2B36;
   --bg:#FFF8E7; --card:#FFFFFF; --line:#EAD9C4; --nav-bg:rgba(255,248,231,.82);
   --txt:#4A4A4A; --txt-2:#7A6A55; --shadow:0 10px 30px -12px rgba(93,78,55,.18);
   --radius:18px;
@@ -295,6 +296,42 @@ table.fix th,table.fix td{padding:10px 12px;text-align:left;border-bottom:1px so
 .stick-beam.wave{animation:stickWave .5s ease}
 @keyframes stickWave{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-30deg)}75%{transform:rotate(30deg)}}
 
+/* ==========================================================================
+   「更可爱」样式覆盖（纯 CSS，不碰任何逻辑）
+   —— 不喜欢就把这一整块删掉，立刻恢复原样。
+   颜色尽量走 CSS 变量 / color-mix，所以在可视化编辑器里换主色时这里会跟着变。
+   ========================================================================== */
+:root{
+  --radius:22px;
+  --bg:#FFF4F7;    --bg:color-mix(in srgb, var(--sakura) 10%, #FFFFFF);
+  --warm:#FDF0F4;  --warm:color-mix(in srgb, var(--sakura) 16%, #FFFFFF);
+  --line:#F7DCE4;  --line:color-mix(in srgb, var(--sakura) 45%, #FFFFFF);
+  --clay:#F7DCE4;
+  --shadow:0 10px 30px -12px rgba(255,143,170,.22);
+  --shadow:0 10px 30px -12px color-mix(in srgb, var(--sakura2) 35%, transparent);
+}
+/* 按钮 → 胶囊形，按下有回弹 */
+.btn-berry,.btn-cream,.btn-ghost{border-radius:999px !important}
+.btn-berry,.btn-cream{transition:transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s ease}
+.btn-berry:hover,.btn-cream:hover{transform:translateY(-2px) scale(1.045)}
+.btn-berry:active,.btn-cream:active{transform:translateY(0) scale(.97)}
+/* 卡片 → 更圆、粉色描边、悬停弹跳 */
+.kcard{border-radius:22px !important;transition:transform .26s cubic-bezier(.34,1.56,.64,1), box-shadow .26s ease}
+.kcard:hover{transform:translateY(-7px) scale(1.012);box-shadow:0 18px 44px -14px rgba(255,107,138,.28)}
+/* 标签 / 输入框也圆润一点 */
+.pill{border-radius:999px !important}
+input,select,textarea{border-radius:14px}
+/* 标题放宽字距，更俏皮 */
+h1.font-display{letter-spacing:.035em}
+h2.font-display{letter-spacing:.045em}
+/* 导航当前项的小圆条更明显 */
+.nav-link.active:after{height:4px;left:15%;right:15%;background:linear-gradient(90deg,var(--sakura),var(--sakura2))}
+/* 滚动条也粉一点 */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--warm)}
+::-webkit-scrollbar-thumb{background:var(--sakura);border-radius:999px}
+::-webkit-scrollbar-thumb:hover{background:var(--sakura2)}
+
 /* 动效尊重系统设置：减少动效时关闭花瓣/音符/跳动 */
 @media (prefers-reduced-motion: reduce){
   *{animation-duration:.001s !important;animation-iteration-count:1 !important;transition-duration:.001s !important}
@@ -493,10 +530,11 @@ table.fix th,table.fix td{padding:10px 12px;text-align:left;border-bottom:1px so
   ⑥ 周边/专辑数据 GOODS_DATA
   ⑦ 渲染函数 RENDER（全部视图模板）
   ⑧ 路由与交互 ROUTER（SPA 无刷新切换）
-  ⑨ 播放器引擎 PLAYER（真实音频 / iTunes官方试听 / 合成演示音）
+  ⑨ 播放器引擎 PLAYER（真实音频 / iTunes官方试听）
   ⑩ 乱序/歌单/历史/收藏 PLAYLIST
   ⑪ 趣味互动 GAMES（性格测试/猜歌/台词/入部测试）
-  ⑫ 初始化 INIT
+  ⑫ 社区 / API 层（留言墙 / 每日猜歌 / 成就；离线自动降级）
+  ⑬ 初始化 INIT
   ========================================================================== -->
 <script>
 'use strict';
@@ -504,7 +542,8 @@ table.fix th,table.fix td{padding:10px 12px;text-align:left;border-bottom:1px so
 /* ============================================================
    ① MEDIA：图片 / 音频占位统一替换入口
    说明：把下面的 '' 改为真实资源 URL（如本地 assets 目录下的图片，或线上地址），
-   全站对应位置会自动使用真实图片/音频；留空则回退到 iTunes 官方30秒试听，再回退到合成演示音。
+   全站对应位置会自动使用真实图片/音频；留空则回退到 iTunes 官方30秒试听，
+   两者都没有的曲目会标注「暂无音源」（不再用合成音冒充）。
    图片务必直接写在 <img src> / CSS url() 中（JS 渲染时也会输出到 src）。
    ============================================================ */
 const MEDIA = {
@@ -534,13 +573,18 @@ const MEDIA = {
   scene_live4:'assets/scene_live4.jpg',   // 五人户外Live演出（1920x1080）
   scene_ufo:'assets/scene_ufo.jpg',       // 第一季·四人夹娃娃机（1728x1080）
   gal_still4:'assets/gal_still4.jpg',      // 五人部室乐器围坐（3543x2509）
-  /* 图库：official/scene/cd/wall/q/cut（空项为占位，可继续扩充） */
+  /* 图库：official/scene/cd/wall/q/cut（q = 头像/Q版；每张图的真实标注见 GALLERY_META） */
   gallery_official:['assets/gal_promo1.jpg','assets/gal_still4.jpg','assets/scene_band1.jpg','assets/wc_816708_1920x1080.jpg','assets/wc_816753_1920x1080.jpg','assets/wc_816941_2560x1600.jpg','assets/wc_816807_2560x1440.jpg','assets/wc_816777_3840x2160.jpg','assets/wc_816791_3840x2160.jpg','assets/wc_816782_3840x2160.jpg','assets/wc_816787_3840x2160.jpg','assets/wc_816789_3840x2160.jpg','assets/banner1.jpg','assets/banner4.jpg','assets/scene_live2.jpg','assets/banner3.jpg'],
   gallery_scene:['assets/wc_816777_3840x2160.jpg','assets/wc_816791_3840x2160.jpg','assets/wc_816807_2560x1440.jpg','assets/scene_room4.jpg','assets/scene_band1.jpg','assets/scene_live4.jpg','assets/scene_ufo.jpg','assets/gal_still4.jpg','assets/scene_school.jpg','assets/banner4.jpg','assets/gal_still2.jpg','assets/scene_live1.jpg','assets/scene_room3.jpg','assets/scene_beach2.jpg','assets/scene_christmas2.jpg','assets/gal_still3.jpg','assets/scene_kyoto.jpg','assets/scene_compare.jpg'],
   gallery_cd:['assets/cd_cagayake.jpg','assets/gal_promo1.jpg','assets/banner1.jpg','assets/banner2.jpg'], /* CD封面：首张为真实单曲封面，其余可替换为对应专辑封面 */
   gallery_wall:['assets/wc_816777_3840x2160.jpg','assets/wc_816791_3840x2160.jpg','assets/wc_816787_3840x2160.jpg','assets/wc_816782_3840x2160.jpg','assets/wc_816789_3840x2160.jpg','assets/wc_816941_2560x1600.jpg','assets/wc_816807_2560x1440.jpg','assets/wc_816725_2560x1600.jpg','assets/wc_816714_2560x1600.jpg','assets/wc_816954_2560x1600.jpg','assets/wc_816904_2560x1600.jpg','assets/banner1.jpg','assets/banner4.jpg','assets/char_yui_face.jpg','assets/char_azusa_face.jpg','assets/wc_816712_1125x2436.jpg','assets/wc_816732_1440x2560.jpg','assets/wc_816762_1080x1920.jpg','assets/wc_816766_1080x1920.jpg','assets/wc_816767_1080x1920.jpg','assets/wc_816774_1080x1920.jpg','assets/wc_816826_3840x1080.jpg','assets/wc_816866_1080x2400.jpg','assets/wc_816872_1080x2400.jpg'],
   gallery_q:['assets/gal_promo2.jpg','assets/char_azusa_face.jpg','assets/char_tsumugi_face.jpg','assets/char_ui_face.jpg'],
   gallery_cut:['assets/wc_816708_1920x1080.jpg','assets/wc_816777_3840x2160.jpg','assets/wc_816791_3840x2160.jpg','assets/wc_816807_2560x1440.jpg','assets/scene_room4.jpg','assets/scene_live4.jpg','assets/scene_ufo.jpg','assets/gal_still4.jpg','assets/gal_still1.jpg','assets/gal_still2.jpg','assets/gal_still3.jpg','assets/banner4.jpg','assets/scene_christmas1.jpg','assets/scene_kyoto.jpg','assets/scene_live1.jpg','assets/scene_live2.jpg','assets/scene_room3.jpg'],
+  /* 周边图鉴：每个分类一张代表图（公开商品图，文件在 assets/goods_*.jpg）
+     删掉某一行则该分类自动退回图标占位 */
+  goods_cd:'assets/goods_cd.jpg', goods_figure:'assets/goods_figure.jpg',
+  goods_merch:'assets/goods_merch.jpg', goods_book:'assets/goods_book.jpg',
+  goods_collab:'assets/goods_collab.jpg',
   /* 注：scene_room1 / scene_room2 用于考据页关键词配图（见配图映射表），scene_compare 已并入 gallery_scene */
 };
 
@@ -1125,7 +1169,7 @@ const CHAR_CATS = [
    ④ 曲目数据 SONGS（≥80 首）
    事实以官方 CD / 动画 Staff 表为准；作词作曲「（）」内为实际担当者。
    audio 字段留空 → 优先播放 iTunes 官方30秒试听（见下文 PREVIEWS 映射），
-   缺失则回退 WebAudio 合成演示旋律；填入真实 mp3/m4a URL 后自动改播真实音频。
+   两者都没有的曲目标注「暂无音源」；填入真实 mp3/m4a URL 后自动改播真实音频。
    ============================================================ */
 function S(id, t, tZh, ro, unit, cat, dur, o){
   o = o||{};
@@ -1144,11 +1188,10 @@ const SONGS = [
 /* ---- OP 主题曲 ---- */
 S('cagayake','Cagayake!GIRLS','闪耀吧女孩们','Kagayake! GIRLS','桜高軽音部（4人Ver→5人Ver）','op',251,
  {ly:'大森祥子',comp:'Tom-H@ck',arr:'Tom-H@ck',rel:'2009-04-22',album:'OP主题曲单曲',ep:'第一季 OP（#1-12；#9起加入梓）',tempo:170,mood:'元气',
-  lyrics:[LYR('聴こえてる？ 高まる鼓動','听到了吗？渐渐高涨的心跳','Kikoeteru? Takamaru kodou'),
-   LYR('始まりの合図 鳴り響け','开始的信号 响彻四方','Hajimari no aizu narihibike')]}),
+  lyrics:[]}),
 S('gogomaniac','GO! GO! MANIAC','去吧去吧狂热者','GO! GO! MANIAC','放課後ティータイム','op',259,
  {ly:'大森祥子',comp:'前澤寛之',arr:'小森茂生',rel:'2010-04-28',album:'OP1（c/w Genius…!?）',ep:'第二季 OP1（#1-13）',tempo:172,mood:'狂热',
-  lyrics:[LYR('GO! GO! MANIAC! 揺れる心 抑えられない','GO! GO! MANIAC! 摇曳的心 无法压抑','GO! GO! MANIAC! Yureru kokoro osaerarenai')]}),
+  lyrics:[]}),
 S('utauyo','Utauyo!!MIRACLE','唱吧!!奇迹','Utauyo!! MIRACLE','放課後ティータイム','op',255,
  {ly:'大森祥子',comp:'前澤寛之',arr:'小森茂生',rel:'2010-08-04',album:'OP2（c/w キラキラDays）',ep:'第二季 OP2（#14-27）',tempo:178,mood:'闪耀',
   lyrics:[]}),
@@ -1163,10 +1206,10 @@ S('cagayake5','Cagayake!GIRLS［5人Ver.］','闪耀吧女孩们（5人版）','
 /* ---- ED 片尾曲 ---- */
 S('donsaylazy','Don\'t say "lazy"','别说"懒惰"','Don\'t say "lazy"','桜高軽音部','ed',247,
  {ly:'大森祥子',comp:'前澤寛之',arr:'小森茂生',rel:'2009-04-22',album:'ED主题曲单曲',ep:'第一季 ED（#1-12）',tempo:96,mood:'酷飒',
-  lyrics:[LYR('Don\'t say "lazy" 何もかも 投げ出してしまえば','Don\'t say "lazy" 如果把一切都抛下的话','Don\'t say "lazy" Nanimokamo nagedashite shimaeba')]}),
+  lyrics:[]}),
 S('listen','Listen!!','听好了!!','Listen!!','放課後ティータイム','ed',249,
  {ly:'大森祥子',comp:'前澤寛之',arr:'小森茂生',rel:'2010-04-28',album:'ED1（c/w Our MAGIC）',ep:'第二季 ED1（#1-13）',tempo:132,mood:'爽快',
-  lyrics:[LYR('Listen!! 君の声が 聞こえてくる','Listen!! 你的声音 传入耳中','Listen!! Kimi no koe ga kikoete kuru')]}),
+  lyrics:[]}),
 S('nothankyou','NO, Thank You!','不，谢谢！','NO, Thank You!','放課後ティータイム','ed',260,
  {ly:'大森祥子',comp:'前澤寛之',arr:'小森茂生',rel:'2010-08-04',album:'ED2（c/w Girls in Wonderland）',ep:'第二季 ED2（#14-27）',tempo:100,mood:'爽快',
   lyrics:[]}),
@@ -1176,10 +1219,7 @@ S('unmei','Unmei♪wa♪Endless!','命运♪是♪无尽的!','Unmei♪wa♪Endl
 /* ---- 剧中插曲 ---- */
 S('fuwafuwa','ふわふわ時間','轻飘飘时间','Fuwa Fuwa Jikan','放課後ティータイム','insert',239,
  {ly:'秋山澪（实际：かきふらい）',comp:'琴吹紬（实际：前澤寛之）',arr:'小森茂生',rel:'2009-07-22',album:'剧中歌迷你专辑「放課後ティータイム」',ep:'S1#6/#11/#12/#14、S2#12 等',tempo:116,mood:'治愈',
-  lyrics:[LYR('君と見る 景色なんて','与你一同眺望的风景','Kimi to miru keshiki nante'),
-   LYR('ありふれて いるけど','虽然早已司空见惯','Arifurete iru kedo'),
-   LYR('あたしにとっては','但对于我而言','Atashi ni totte wa'),
-   LYR('この場所が すべて','这个地方就是一切','Kono basho ga subete')]}),
+  lyrics:[]}),
 S('watashinokoi','わたしの恋はホッチキス','我的恋爱是订书机','Watashi no Koi wa Hotchkiss','放課後ティータイム','insert',250,
  {ly:'秋山澪（实际：稲葉エミ）',comp:'琴吹紬（实际：藤末樹）',arr:'小森茂生',rel:'2009-07-22',album:'剧中歌迷你专辑「放課後ティータイム」',ep:'S1#8/#9（新歓・入部）',tempo:150,mood:'活泼',
   lyrics:[]}),
@@ -1191,7 +1231,7 @@ S('karenochi','カレーのちライス','咖喱之后是米饭','Karē nochi Ra
   lyrics:[]}),
 S('uandi','U&I','U&I（你与我）','Yū ando Ai','放課後ティータイム','insert',253,
  {ly:'平沢唯（实际：大森祥子）',comp:'前澤寛之',arr:'小森茂生',rel:'2010-09-08',album:'剧中歌单曲「ごはんはおかず/U&I」',ep:'S2#20（文化祭）',tempo:120,mood:'暖心',
-  lyrics:[LYR('U&I ありがとう ずっと伝えたかった','U&I 谢谢你 一直想对你说','U&I Arigatō zutto tsutaetakatta')]}),
+  lyrics:[]}),
 S('gohan','ごはんはおかず','米饭才是主菜','Gohan wa Okazu','放課後ティータイム','insert',236,
  {ly:'大森祥子',comp:'前澤寛之',arr:'小森茂生',rel:'2010-09-08',album:'剧中歌单曲「ごはんはおかず/U&I」',ep:'S2#20（文化祭）',tempo:130,mood:'欢快',
   lyrics:[]}),
@@ -1203,16 +1243,13 @@ S('tenshi','天使にふれたよ!','触及了天使!','Tenshi ni Fureta yo!','�
   lyrics:[]}),
 S('singing','Singing!','歌唱吧!','Singing!','放課後ティータイム','insert',260,
  {ly:'大森祥子',comp:'前澤寛之',arr:'小森茂生',rel:'2011-11-16',album:'剧场版剧中歌单曲',ep:'剧场版（伦敦Live）',tempo:140,mood:'闪耀',
-  lyrics:[LYR('Singing! Singing! 声を重ねて','Singing! Singing! 让声音交织','Singing! Singing! Koe o kasanete')]}),
+  lyrics:[]}),
 S('tsubasa','翼をください','请给我翅膀','Tsubasa o Kudasai','桜高軽音部（律・澪・紬）','insert',180,
  {ly:'山上路夫',comp:'村井邦彦',arr:'百石元',rel:'—',album:'（名曲翻唱）',ep:'S1#1（废部危机时的三人合奏）',tempo:90,mood:'经典',
   lyrics:[]}),
 S('kouka','桜が丘女子高等学校校歌','樱丘女子高中校歌','Sakuragaoka Joshi Kōtōgakkō Kōka','桜高同窓会','insert',120,
  {ly:'桜高同窓会',comp:'桜高同窓会',arr:'—',rel:'—',album:'剧中校歌',ep:'全篇',tempo:72,mood:'庄严',
-  lyrics:[LYR('澄みし碧空 仰ぎ見て','仰望澄澈的碧空','Sumishi aozora aogimite'),
-   LYR('遥けき理想を 結実ばむと','愿把遥远的理想结出果实','Harukeki risō o musubamu to'),
-   LYR('香れる桜花の 咲く丘に','在樱花飘香的丘上','Kaoreru ōka no saku oka ni'),
-   LYR('ああ 励みし友垣が集う校庭','啊，奋勉的同窗相聚的校园','Ā hagemi shi tomogaki ga tsudō niwa')]}),
+  lyrics:[]}),
 S('koukarock','桜が丘女子高等学校校歌［Rock Ver.］','樱丘高中校歌（摇滚版）','Kōka (Rock Ver.)','放課後ティータイム','insert',150,
  {ly:'桜高同窓会',comp:'桜高同窓会',arr:'小森茂生',rel:'2010-06-02',album:'剧中歌单曲 c/w',ep:'第二季',tempo:140,mood:'摇滚',
   lyrics:[]}),
@@ -1614,12 +1651,34 @@ const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<'
 /* 时长格式化 mm:ss */
 function fmtD(sec){ sec = Math.round(sec||0); return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0'); }
 /* 歌曲分类徽章 */
-function catPill(cat){ const c=CAT_MAP[cat]||{}; return '<span class="pill" style="background:'+c.color+'22;color:'+c.color+'">'+esc(c.name||cat)+'</span>'; }
+function catPill(cat){
+  const c=CAT_MAP[cat]||{};
+  const col = c.color || '#FFB7C5';
+  /* 文字色 = 同色系加深。关键点：掺多少深色要按这个颜色自身的亮度来定——
+     原来直接用 c.color 当文字色，浅色分类（角色歌 #FFB7C5、柠檬黄 #FFE599）
+     会变成浅字压浅底，实测对比度只有 1.4:1，基本看不清。
+     固定比例也不行（亮黄比粉更亮），所以按亮度算：越亮掺越多深色。 */
+  let keep = 0.5;
+  const m = /^#([0-9A-Fa-f]{6})$/.exec(col);
+  if(m){
+    const r=parseInt(m[1].slice(0,2),16), g=parseInt(m[1].slice(2,4),16), b=parseInt(m[1].slice(4,6),16);
+    const lum = (0.2126*r + 0.7152*g + 0.0722*b) / 255;   /* 0~1 粗略亮度 */
+    keep = Math.max(0.28, Math.min(0.62, 0.62 - lum*0.35));
+  }
+  const deep = 'color-mix(in srgb, '+col+' '+(keep*100).toFixed(0)+'%, #4A3B31)';
+  return '<span class="pill" style="background:'+col+'22;color:'+deep+'">'+esc(c.name||cat)+'</span>';
+}
+/* 「暂无音源」小标：没有 iTunes 官方试听、也没自填音频的曲目 */
+function noSrcBadge(s){
+  return songPlayable(s) ? '' : '<span class="pill" style="background:#8B735522;color:#8B7355" title="没有可用的官方试听片段，播放时会自动跳到下一首">暂无音源</span>';
+}
 /* 歌曲单行（表格行） */
 function songRow(s){
-  return '<tr data-play="'+s.id+'" class="cursor-pointer hover:bg-warmgray/60 dark:hover:bg-[#4A3B31] transition-colors">'
+  const off = !songPlayable(s);
+  return '<tr data-play="'+s.id+'" class="cursor-pointer hover:bg-warmgray/60 dark:hover:bg-[#4A3B31] transition-colors'+(off?' opacity-60':'')+'">'
    +'<td class="w-10 text-center"><span class="text-sakura2">'+ICONS.play+'</span></td>'
    +'<td style="width:34%"><a data-route="/song/'+s.id+'" class="font-bold hover:text-sakura2">'+esc(s.t)+'</a>'
+   +(off?' '+noSrcBadge(s):'')
    +'<div class="text-[11px] text-[var(--txt-2)]">'+esc(s.ro)+'</div></td>'
    +'<td style="width:18%">'+esc(s.unit)+'</td>'
    +'<td style="width:14%">'+catPill(s.cat)+'</td>'
@@ -1628,12 +1687,13 @@ function songRow(s){
 }
 /* 歌曲卡片（网格用） */
 function songCard(s){
+  const off = !songPlayable(s);
   return '<div class="kcard p-4 flex items-start gap-3 cursor-pointer" data-play="'+s.id+'" role="button" aria-label="播放 '+esc(s.t)+'">'
    +cornerIc('note', '#FFB7C5')
    +'<div class="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center text-white text-lg" style="background:linear-gradient(135deg,'+(CAT_MAP[s.cat]?CAT_MAP[s.cat].color:'#FFB7C5')+',#8B7355)">▶</div>'
    +'<div class="min-w-0"><div class="font-bold truncate">'+esc(s.t)+'</div>'
    +'<div class="text-[11px] text-[var(--txt-2)] truncate">'+esc(s.unit)+' · '+esc(s.ro)+'</div>'
-   +'<div class="text-[11px] text-sakura2 mt-1">'+fmtD(s.dur)+'</div></div></div>';
+   +'<div class="text-[11px] text-sakura2 mt-1">'+fmtD(s.dur)+(off?' '+noSrcBadge(s):'')+'</div></div></div>';
 }
 /* 角色小卡片 */
 function charCard(c){
@@ -1677,8 +1737,8 @@ function renderFooter(){
   +'<li>监督：山田尚子 / 系列构成：吉田玲子 / 音乐：百石元</li>'
   +'<li>放送：TBS / BS-TBS（2009・2010・剧场版2011）</li></ul></div>'
   +'<div><div class="font-bold text-cocoa dark:text-cream mb-3">本页说明</div><ul class="space-y-1">'
-  +'<li>图片为占位符（见 MEDIA 注释）；音乐已接入 iTunes 官方30秒试听（见 PREVIEWS），可自填 song.audio 播放完整版</li>'
-  +'<li>试听缺失或加载失败时自动回退 WebAudio 合成演示音</li>'
+  +'<li>站内图片与壁纸均为已落盘的本地素材（见 MEDIA 与 GALLERY_META 注释）；音乐接入 iTunes 官方30秒试听（见 PREVIEWS），可自填 song.audio 播放完整版</li>'
+  +'<li>没有官方试听的曲目会标注「暂无音源」，点击时自动跳到下一首可播放的，不会用假旋律冒充</li>'
   +'<li>歌词节选以官方歌词本为准，完整版待补充</li>'
   +'<li>数据核对时间：2026-10；发现错误欢迎反馈</li></ul></div></div>'
   +'<div class="text-center text-xs text-[var(--txt-2)] py-3">'+siteAgeText()+'<span class="ml-2 opacity-70">（建站于 2026-10-07）</span></div>'
@@ -2354,7 +2414,7 @@ const ARTICLE_MAP = Object.fromEntries(ARTICLES.map(a=>[a.id,a]));
    ============================================================ */
 function viewHome(){
   const daily = dailyPick();
-  /* Banner 数据（图片为占位，替换 MEDIA.banner1-4） */
+  /* Banner 数据（素材见 MEDIA.banner1-4） */
   const slides = [
     {key:'banner1', ja:'放課後ティータイム、はじまるよ！', zh:'放学后茶会，开始了哦！', g:'linear-gradient(120deg,#FFB7C5,#FF8FAA)', ic:'teacup'},
     {key:'banner2', ja:'学園祭ライブ、最高でした！', zh:'学园祭演出，太棒了！', g:'linear-gradient(120deg,#FFE599,#FFB7C5)', ic:'mic'},
@@ -2385,14 +2445,15 @@ function viewHome(){
   ];
   const stats = [
     {n:SONGS.length, l:'收录曲目'},{n:CHARACTERS.length, l:'角色档案'},
-    {n:EPISODES.length, l:'分集条目'},{n:Object.keys(MEDIA).filter(k=>/^gallery/.test(k)).reduce((a,k)=>a+MEDIA[k].length,0)+24, l:'图库占位'},
+    {n:EPISODES.length, l:'分集条目'},{n:Object.keys(MEDIA).filter(k=>/^gallery/.test(k)).reduce((a,k)=>a+MEDIA[k].length,0)+24, l:'图库图片'},
     {n:CHARACTERS.reduce((a,c)=>a+c.quotes.length,0)+EPISODES.reduce((a,e)=>a+e.quotes.length,0), l:'台词收录'},
     {n:SONGS.reduce((a,s)=>a+(s.lyrics.length?1:0),0), l:'歌词节选'}
   ];
   const news = [
+    {d:'2026-10-10', t:'音源与图库修订', s:'移除 WebAudio 合成演示音——30 首没有官方试听的曲目改为标注「暂无音源」并在点击/切歌时自动跳过；图库逐张看图标注真实场景与出场角色，筛选按钮只列该分类里实际出现的角色，并修正壁纸与 CD/Q版 分类里的错配图片；周边图鉴补上每个分类的官方代表图；修复智能乱序模式下「歌单只加了 1 首时 ⏭ 没反应」；「每日壁纸·换一张」改为真的换图。'},
     {d:'2026-10-08', t:'离线化与修复', s:'Tailwind 与字体改为本地自托管，断网双击即可完整显示（原先字体接口只返回 2 款 400 字重，非 400 字重全靠浏览器伪粗体）；修复「数据统计」六项恒为 0；11 个闲置素材接入图库；第二季 20 集补齐剧情简介。'},
     {d:'2026-10-07', t:'v1.0 上线', s:'全站 8 大模块完成；音乐中心收录 80+ 曲目，五种播放模式上线。'},
-    {d:'2026-10-07', t:'音乐播放器', s:'全局不中断播放器：47 首接入 iTunes 官方30秒试听，缺失自动回退合成演示音。'},
+    {d:'2026-10-07', t:'音乐播放器', s:'全局不中断播放器：47 首接入 iTunes 官方30秒试听，其余曲目标注「暂无音源」并自动跳过。'},
     {d:'2026-10-07', t:'角色与功能更新', s:'新增角色生日提醒、打call应援器、歌词导入功能；4 位占位角色替换为真实角色（斉藤菫・佐久間紫・若王子いちご・佐藤莉子）。'},
   ];
 
@@ -2458,6 +2519,16 @@ function viewHome(){
     </div>
   </section>
 
+  <!-- 粉丝留言墙（在线时由 WALL.mountHome() 异步填充；离线显示占位） -->
+  <section class="mt-10">
+    <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+      <h2 class="font-display text-2xl text-cocoa dark:text-cream">粉丝留言墙 <span class="text-sm font-body text-sakura2">Message Wall</span></h2>
+      <button class="btn btn-cream px-4 py-2 text-xs" data-route="/wall">写下你的留言 →</button>
+    </div>
+    ${noteDivider()}
+    <div id="home-wall-list" class="py-3"><p class="text-sm text-[var(--txt-2)] text-center py-3">正在载入留言…</p></div>
+  </section>
+
   <!-- 轻音专栏（对应首页大字的 4 篇文章） -->
   <section class="mt-10">
     <h2 class="font-display text-2xl text-cocoa dark:text-cream">轻音专栏 <span class="text-sm font-body text-sakura2">Columns</span></h2>
@@ -2485,6 +2556,8 @@ function viewHome(){
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
       ${stats.map(s=>`<div class="kcard p-5 text-center">${cornerIc('star','#FFE599')}<div class="font-display text-3xl text-sakura2 tabular-nums" data-count="${s.n}">0</div><div class="text-xs text-[var(--txt-2)] mt-1">${s.l}</div></div>`).join('')}
     </div>
+    <!-- 社区动态（在线时由 WALL.mountHome() 填充；离线保持空白） -->
+    <div id="home-community-stats" class="text-center text-xs text-[var(--txt-2)] mt-4"></div>
   </section>
 
   <!-- 最新更新公告 -->
@@ -2501,7 +2574,10 @@ function viewHome(){
 function dailyPick(){
   const now = new Date(), seed = now.getFullYear()*10000+(now.getMonth()+1)*100+now.getDate();
   const rnd = n => { let x = seed % 97; return (x*31+n*17)%97; };
-  const song = SONGS[rnd(3) % SONGS.length];
+  /* 今日推荐只从「有音源」的曲目里挑：否则会推荐一首点了就自动跳走的歌 */
+  const pool = SONGS.filter(songPlayable);
+  const list = pool.length ? pool : SONGS;
+  const song = list[rnd(3) % list.length];
   const qs = CHARACTERS.reduce((a,c)=>a.concat(
     c.quotes
       .filter(q => !/待补充|待核实|欢迎补充|待补充/.test((q.ja||'')+(q.zh||'')))
@@ -2908,7 +2984,8 @@ function viewSong(id){
         </div>
         <div class="mt-4 text-sm text-[var(--txt-2)]">专辑：${esc(s.album||'待补充')} · 出现场景：${esc(s.ep||'—')}</div>
         <div class="flex gap-2 mt-5 flex-wrap">
-          <button class="btn btn-berry px-6 py-2.5 text-sm" data-play="${s.id}">▶ 播放</button>
+          <button class="btn ${songPlayable(s)?'btn-berry':'btn-ghost'} px-6 py-2.5 text-sm" data-play="${s.id}">${songPlayable(s)?'▶ 播放':'暂无音源'}</button>
+          ${songPlayable(s)?'':'<span class="text-[11px] text-[var(--txt-2)] self-center">这首歌没有可用的官方试听片段，点击会跳到下一首可播放的</span>'}
           <button class="btn btn-cream px-5 py-2.5 text-sm" data-action="queue-song" data-song="${s.id}">加入歌单</button>
           <button class="btn btn-ghost px-5 py-2.5 text-sm" data-action="fav-song" data-song="${s.id}">收藏</button>
         </div>
@@ -2953,31 +3030,128 @@ function viewSong(id){
 /* ============================================================
    图库壁纸视图
    ============================================================ */
+/* 图库逐条真实标注 --------------------------------------------------------
+   key 为 MEDIA 里的图片路径。这份标注由「逐张看图」得出，不按文件名猜。
+   label 标题 / scene 场景 / kind 类型 / chars 图中真实出现的角色
+   chars 用 'group' 表示 3 人及以上合影；没有角色的纯场景为 []。
+   没登记在案的图片退回通用标题，且不编造角色——宁缺毋滥。 */
+const GALLERY_META = {
+  /* ---- 角色壁纸（竖版 1080x1920 系列） ---- */
+  'assets/wc_816762_1080x1920.jpg': {label:'唯与梓圣诞装举草莓', scene:'部室·圣诞装扮', kind:'插画', chars:['yui','azusa'], note:'两人穿蓝绿圣诞装，唯高举草莓，梓戴圣诞帽一脸惊讶。'},
+  'assets/wc_816766_1080x1920.jpg': {label:'唯・澪・律・紬・梓礼服合影', scene:'樱花花瓣中五人合影', kind:'插画', chars:['tsumugi','yui','azusa','ritsu','mio'], note:'可辨认 5 人：金发粗眉的紬、黑长发的澪与梓、棕发的唯与律，皆着白/黑礼服躺在樱花瓣间。'},
+  'assets/wc_816767_1080x1920.jpg': {label:'圣诞装五人合影', scene:'圣诞·礼物与吉他', kind:'插画', chars:['yui','mio','ritsu','tsumugi','azusa'], note:'全员圣诞装躺卧构图，梓与澪戴猫耳，唯律紬扮驯鹿，点缀吉他与礼物盒。'},
+  'assets/wc_816774_1080x1920.jpg': {label:'唯·澪·紬花柄和服躺卧', scene:'花柄和服三人躺卧', kind:'插画', chars:['yui','mio','tsumugi'], note:'唯、澪、紬三人穿碎花和服躺卧在散落樱花瓣的白色床单上。'},
+  /* ---- 角色壁纸（3840x2160 / 2560x1440 系列） ---- */
+  'assets/wc_816777_3840x2160.jpg': {label:'五人部室吃蛋糕合影', scene:'部室·蛋糕茶点', kind:'动画截图', chars:['yui','mio','ritsu','tsumugi','azusa'], note:'唯对着镜头比剪刀手，梓与澪害羞遮脸，桌上摆着草莓蛋糕和红茶。'},
+  'assets/wc_816782_3840x2160.jpg': {label:'五人部室试穿女仆装', scene:'部室·女仆装试穿', kind:'动画截图', chars:['yui','mio','ritsu','tsumugi','azusa'], note:'唯和紬手持女仆装，澪、律、梓在后面惊讶地看着。'},
+  'assets/wc_816787_3840x2160.jpg': {label:'秋山澪持贝斯特写', scene:'室内·贝斯手特写', kind:'动画截图', chars:['mio'], note:'澪穿校服、长发垂肩，画面左侧露出贝斯琴颈、右侧可见铜钹。'},
+  'assets/wc_816789_3840x2160.jpg': {label:'澪黑长直·紧张冒汗特写', scene:'教室·澪紧张特写', kind:'动画截图', chars:['mio'], note:'澪穿浅色校服配蓝色领结，脸上带红晕和汗珠，背景为明亮教室窗边。'},
+  'assets/wc_816791_3840x2160.jpg': {label:'唯澪律紬梓咖啡馆聚餐', scene:'咖啡馆五人围桌聚餐', kind:'动画截图', chars:['ritsu','tsumugi','yui','azusa','mio'], note:'剧场版伦敦场景：左前黄发箍的律、身旁金发的紬、后方比剪刀手的唯、中间双马尾的梓、右侧长黑发的澪。'},
+  'assets/wc_816807_2560x1440.jpg': {label:'樱花树下四人挥手', scene:'樱花树下·毕业', kind:'插画', chars:['ritsu','mio','tsumugi','yui'], note:'律、澪、紬、唯身着校服手持毕业证书，樱花纷飞的春日场景（梓此时未登场）。'},
+  /* ---- 动画截图 / 场景实拍 ---- */
+  'assets/scene_room3.jpg': {label:'紬澪律唯的部室茶会', scene:'部室午后茶会', kind:'动画截图', chars:['tsumugi','mio','ritsu','yui'], note:'四人围桌喝茶吃蛋糕：紬、澪、律，最右背对镜头者为唯。'},
+  'assets/scene_room4.jpg': {label:'轻音部五人合影·唯澪律紬梓', scene:'轻音部教室五人合影', kind:'动画截图', chars:['tsumugi','azusa','ritsu','mio','yui'], note:'五人制服合影，白板可见「放課後ティータイム」字样。'},
+  'assets/scene_school.jpg': {label:'樱丘原型校舍实景', scene:'校园·西式校舍正门', kind:'实景照片', chars:[], note:'滋贺旧丰乡小学校实景，即樱丘高中取景原型。'},
+  'assets/scene_ufo.jpg': {label:'四人游戏厅抓娃娃', scene:'游戏厅·抓娃娃机', kind:'动画截图', chars:['yui','ritsu','tsumugi','mio'], note:'UFO CATCHER 前，机内是くまぶたさん玩偶。'},
+  /* ---- 横版壁纸 ---- */
+  'assets/wc_816708_1920x1080.jpg': {label:'轻音部五人合影·唯澪律紬梓', scene:'社团教室五人合影', kind:'动画截图', chars:['tsumugi','azusa','ritsu','mio','yui'], note:'左起紬、梓、律、澪、唯，黑板上有 HTT 涂鸦。'},
+  'assets/wc_816712_1125x2436.jpg': {label:'三人部室近景·笑闹', scene:'部室·黑板近景', kind:'插画', chars:['yui','mio','ritsu'], note:'竖版壁纸，三人挤在镜前的广角构图。'},
+  'assets/wc_816714_2560x1600.jpg': {label:'四人夏日泳装合影', scene:'海边·夏日泳装', kind:'插画', chars:['yui','mio','ritsu','tsumugi'], note:'纯白背景夏日泳装群像，手持热带饮品与凉鞋。'},
+  'assets/wc_816725_2560x1600.jpg': {label:'三人夏日林间漫步', scene:'夏日·林间小路', kind:'插画', chars:['yui','mio','azusa'], note:'三人的夏装壁纸，水彩感背景留白多。'},
+  'assets/wc_816732_1440x2560.jpg': {label:'唯澪律紬梓的伦敦点心时光', scene:'伦敦公园吃点心合影', kind:'插画', chars:['yui','azusa','ritsu','tsumugi','mio'], note:'伦敦篇宣传插画：前排唯、律、澪（举英国旗），后排梓、紬。'},
+  'assets/wc_816753_1920x1080.jpg': {label:'轻音五人在蓝天吃冰淇淋', scene:'蓝天白云下吃冰淇淋', kind:'插画', chars:['ritsu','mio','yui','azusa','tsumugi'], note:'五人夏季校服一字排开各持冰淇淋。'},
+  /* ---- 超宽/竖版壁纸 与 头像裁切 ---- */
+  'assets/wc_816826_3840x1080.jpg': {label:'轻音少女樱花树下四人', scene:'樱花树下四人合影', kind:'动画截图', chars:['ritsu','mio','tsumugi','yui'], note:'共 4 人：律、澪、紬、唯，背景为盛开的樱花与蓝天。'},
+  'assets/wc_816866_1080x2400.jpg': {label:'唯、梓、紬三人欢乐合影', scene:'三人合影举杯庆祝', kind:'插画', chars:['azusa','tsumugi','yui'], note:'共 3 人：中野梓、琴吹紬、平泽唯。'},
+  'assets/wc_816872_1080x2400.jpg': {label:'唯与紬的毕业花束时刻', scene:'两名少女并肩而坐', kind:'动画截图', chars:['yui','tsumugi'], note:'只有 2 人：平沢唯与琴吹紬，佩戴粉色胸花，似毕业场景。'},
+  'assets/wc_816904_2560x1600.jpg': {label:'轻音成员室内合影（含跨作品角色）', scene:'室内窗边多人合影', kind:'插画', chars:['tsumugi','mio','yui'], note:'画面约 9 人，仅认出紬、澪、唯；另有持小提琴者与粉发者不像轻音角色，未标注。'},
+  'assets/wc_816941_2560x1600.jpg': {label:'轻音五人在树下低头围观', scene:'仰视视角五人俯身看镜头', kind:'插画', chars:['ritsu','mio','yui','tsumugi','azusa'], note:'共 5 人：律、澪、唯、紬、梓。'},
+  'assets/wc_816954_2560x1600.jpg': {label:'唯、澪、律、紬、梓派对合影', scene:'五人派对庆生', kind:'插画', chars:['azusa','tsumugi','yui','mio','ritsu'], note:'共 5 人，官方风格派对插画。'},
+  'assets/char_yui_face.jpg': {label:'平沢唯头像特写', scene:'棕发少女脸部特写', kind:'头像裁切', chars:['yui'], note:'棕红中短发配两枚黄色发夹的头像裁切。'},
+  'assets/char_azusa_face.jpg': {label:'中野梓·猫耳发箍特写', scene:'派对·猫耳发箍', kind:'头像裁切', chars:['azusa'], note:'从派对合影裁出的头像：深蓝黑短发配猫耳发箍，正面开心表情。'},
+  'assets/char_tsumugi_face.jpg': {label:'琴吹紬的金发粗眉特写', scene:'金发少女面部特写', kind:'头像裁切', chars:['tsumugi'], note:'金色长直发配粗眉与蓝色大眼睛。'},
+  'assets/char_ui_face.jpg': {label:'平沢憂发箍特写头像', scene:'少女脸部特写', kind:'头像裁切', chars:['ui'], note:'棕红中短发配黄色发箍、无唯的双发夹，判为平沢憂。'},
+  /* ---- 官方宣传图 / Banner ---- */
+  'assets/banner1.jpg': {label:'轻音少女五人海边合影', scene:'蓝天·条纹衫合影', kind:'插画', chars:['tsumugi','yui','mio','ritsu','azusa'], note:'五位成员穿蓝白条纹衫在晴空下并排合影。'},
+  'assets/banner2.jpg': {label:'HTT五人合影·唯澪律紬梓', scene:'部室·HTT黑板', kind:'动画截图', chars:['tsumugi','mio','yui','azusa','ritsu'], note:'五人穿灰色连帽衫在 HTT 黑板前比手势。'},
+  'assets/banner3.jpg': {label:'轻音部五人合影·唯澪律紬梓', scene:'部室·海报墙前合影', kind:'动画截图', chars:['tsumugi','azusa','ritsu','mio','yui'], note:'五人穿藏青校服在贴满海报的部室里比剪刀手合影。'},
+  'assets/banner4.jpg': {label:'轻音少女伦敦行·紬梓律澪', scene:'伦敦街头·与警察合影', kind:'动画截图', chars:['tsumugi','azusa','ritsu','mio'], note:'剧场版伦敦篇：四人穿冬装戴围巾在门口与英国警察合影（画面内确认为四人）。'},
+  'assets/gal_promo1.jpg': {label:'轻音少女剧场版 唯与梓', scene:'公园·剧场版海报', kind:'商品图', chars:['azusa','yui'], note:'剧场版电影海报，格纹背景上唯与梓双人合影。'},
+  'assets/gal_promo2.jpg': {label:'唯澪律梓紬派对合影', scene:'白粉圆点底·派对', kind:'插画', chars:['mio','ritsu','yui','azusa','tsumugi'], note:'五人手持礼物、花束与蛋糕的白底宣传插画。'},
+  'assets/gal_still1.jpg': {label:'真鍋和·指挥棒与乐谱', scene:'绿底·持指挥棒与乐谱', kind:'插画', chars:['nodoka'], note:'角色歌《Conduct》封面，画面唯一角色是真鍋和。'},
+  'assets/gal_still2.jpg': {label:'唯·澪·律·紬 黑白舞台装', scene:'舞台·黑白礼服合照', kind:'插画', chars:['tsumugi','mio','ritsu','yui'], note:'四人着黑白礼裙配长手套：紬弹键盘、唯抱吉他、律打鼓、澪持贝斯与麦克风。'},
+  'assets/gal_still3.jpg': {label:'唯·紬·梓的户外草地休憩', scene:'户外草地·三人合影', kind:'动画截图', chars:['yui','tsumugi','azusa'], note:'左侧唯手持小白花，中间紬托腮浅笑，右侧双马尾梓，三人坐于绿荫下。'},
+  'assets/gal_still4.jpg': {label:'轻音部四人合影·律澪唯紬', scene:'部室·乐器合影', kind:'插画', chars:['ritsu','mio','yui','tsumugi'], note:'律持鼓棒、澪抱贝斯、唯比剪刀手、紬端茶杯，背景有键盘与鼓组。'},
+  /* ---- CD 封面 / 乐队合影 ---- */
+  'assets/cd_cagayake.jpg': {label:'唯澪律紬 Cagayake!封面', scene:'粉底波点·CD封面', kind:'商品图', chars:['ritsu','yui','tsumugi','mio'], note:'《Cagayake!GIRLS》单曲 CD 封面，四人穿樱高制服（梓加入前的阵容）。'},
+  'assets/scene_band1.jpg': {label:'唯・澪・律・紬 乐队合影', scene:'蓝底乐队大合影', kind:'插画', chars:['tsumugi','ritsu','yui','mio'], note:'官方风格蓝底宣传插画，四人组，未见梓。'},
+  /* ---- 动画截图 / 场景 ---- */
+  'assets/scene_beach2.jpg': {label:'紬·律·澪的海边戏水', scene:'沙滩浅水嬉戏', kind:'插画', chars:['tsumugi','ritsu','mio'], note:'三人穿泳装泡在浅水中；后方水下隐约还有一人，未作辨认。'},
+  'assets/scene_christmas1.jpg': {label:'唯与轻音部圣诞礼物交换', scene:'圣诞聚会·客厅餐桌', kind:'动画截图', chars:['yui','ritsu','tsumugi','mio'], note:'圣诞聚会片段，左侧有两三人被遮挡未能确认，故只标注可辨认者。'},
+  'assets/scene_christmas2.jpg': {label:'唯与忧的圣诞夜蛋糕', scene:'家中客厅·圣诞树被炉', kind:'动画截图', chars:['yui','ui'], note:'家中场景：唯伏在暖炉桌上，妹妹忧站在一旁，室内已摆圣诞树。'},
+  'assets/scene_compare.jpg': {label:'部室动画截图与实景对照', scene:'部室·上下两格对照', kind:'实景照片', chars:['tsumugi','mio','yui','ritsu'], note:'上下两格为同一部室的动画画面与现实取景地实景照片对照。'},
+  'assets/scene_kyoto.jpg': {label:'律与澪·红祭典演出', scene:'舞台侧·演出前', kind:'动画截图', chars:['ritsu','mio'], note:'两人穿红色法被式演出服，澪手持麦克风架；画面内容为演出场景，与文件名 kyoto 提示的京都修学旅行不符，待核实。'},
+  'assets/scene_live1.jpg': {label:'澪·唯·律 舞台三人合唱', scene:'舞台Live·三人合唱', kind:'插画', chars:['mio','yui','ritsu'], note:'三人穿同款蓝白横条纹衫在舞台灯光下持麦克风演唱。'},
+  'assets/scene_live2.jpg': {label:'舞台乐队演奏（实拍演出照）', scene:'舞台·乐队演奏', kind:'实景照片', chars:['group'], note:'真人实景舞台照（5 名持乐器演奏者，背景 LED 大屏），不是动画画面，成员身份无法与角色逐一对应。'},
+  'assets/scene_live4.jpg': {label:'K-ON!五人沙滩演奏', scene:'冬季沙滩Live', kind:'动画截图', chars:['mio','tsumugi','yui','azusa','ritsu'], note:'剧场版海滩演出场景，唯与梓共用一支麦克风。'},
+};
+const GALLERY_CHAR_NAME = { group:'全员/多人', none:'无角色' };
+function galleryCharLabel(ids){
+  if(!ids || !ids.length) return GALLERY_CHAR_NAME.none;
+  return ids.map(id=>id==='group' ? GALLERY_CHAR_NAME.group
+                 : (CHAR_MAP[id] ? CHAR_MAP[id].nameZh : id)).join('、');
+}
 const GALLERY_CATS = [
   {id:'official', name:'官方宣传图', d:'主视觉・杂志图・展会图', icon:'sakura', c:'#FF6B8A', n:15},
   {id:'scene',   name:'动画截图', d:'名场面・日常定格', icon:'play', c:'#A8D8EA', n:17},
   {id:'cd',      name:'CD专辑封面', d:'单曲・专辑・BOX封面', icon:'note', c:'#9DC08B', n:4},
   {id:'wall',    name:'角色壁纸', d:'各角色壁纸・1080P/2K/4K', icon:'star', c:'#8B7355', n:15},
-  {id:'q',       name:'Q版插画', d:'Q版・ちびキャラ', icon:'heart', c:'#FFB7C5', n:4},
+  {id:'q',       name:'头像/Q版', d:'角色头像与 Q 版插画', icon:'heart', c:'#FFB7C5', n:4},
   {id:'cut',     name:'名场面合集', d:'剧情经典镜头合集', icon:'mic', c:'#F2B63E', n:17}
 ];
 /* 分类张数以 MEDIA 数组实际长度为准：galleryItems() 按 n 截断，
    n 与数组脱节会渲染出空白占位块，这里统一同步，避免两处手工维护 */
 GALLERY_CATS.forEach(c=>{ const a = MEDIA['gallery_'+c.id]; if(a && a.length) c.n = a.length; });
-/* 图库条目生成（占位；替换 MEDIA.gallery_xxx 数组即可） */
+/* 图库条目生成：每条都带上「这张图到底是什么」的真实标注。
+   注意：角色名不再按序号轮流贴（旧实现用 CHARACTERS[i%len]，
+   导致图片和角色名完全对不上），一律取自 GALLERY_META。 */
 function galleryItems(catId){
   const c = GALLERY_CATS.find(x=>x.id===catId);
   const keys = MEDIA['gallery_'+catId]||[];
   return Array.from({length:c.n}, (_,i)=>{
-    const ch = CHARACTERS[i%CHARACTERS.length];
-    return { key: 'gallery_'+catId+'['+i+']', url: keys[i]||'', label: c.name+' '+(i+1), char: ch.id, charName: ch.nameZh };
+    const url = keys[i]||'';
+    const m = GALLERY_META[url] || null;
+    const chars = (m && m.chars) ? m.chars : [];
+    return {
+      key: 'gallery_'+catId+'['+i+']', url,
+      label: m ? m.label : (c.name+' '+(i+1)),
+      scene: m ? (m.scene||'') : '',
+      kind:  m ? (m.kind||'')  : '',
+      note:  m ? (m.note||'')  : '',
+      chars,
+      /* char / charName 保留旧字段名，兼容灯箱与搜索里的既有引用 */
+      char: chars[0]||'none',
+      charName: galleryCharLabel(chars)
+    };
   });
 }
+/* 该分类里真实出现过的角色：筛选按钮只列这些，不再罗列全部 14 个角色 */
+function galleryCharsOf(catId){
+  const set = new Set();
+  galleryItems(catId).forEach(g=>g.chars.forEach(id=>set.add(id)));
+  return [...set];
+}
+/* 每日壁纸：按日期定初始那张；「换一张」从同一分类里随机取另一张 */
+function galleryDailyWall(){
+  const pool = galleryItems('wall').filter(g=>g.url);
+  if(!pool.length) return null;
+  return pool[(new Date()).getDate() % pool.length];
+}
 function viewGallery(){
-  const dW = galleryItems('wall')[ (new Date()).getDate() % 4 ];
+  const dW = galleryDailyWall();
   return `
   <header class="mb-6"><h1 class="font-display text-3xl text-cocoa dark:text-cream">图库壁纸 <span class="text-base font-body text-sakura2">Gallery</span></h1>
-  <p class="text-sm text-[var(--txt-2)] mt-1">官方宣传图 / 动画截图 / CD封面 / 角色壁纸 / Q版插画 / 名场面合集。</p></header>
+  <p class="text-sm text-[var(--txt-2)] mt-1">官方宣传图 / 动画截图 / CD封面 / 角色壁纸 / 头像Q版 / 名场面合集。每张图都标注了真实场景与出场角色。</p></header>
   ${noteDivider()}
   <section class="grid grid-cols-2 md:grid-cols-3 gap-4">
     ${GALLERY_CATS.map(c=>`
@@ -2990,39 +3164,40 @@ function viewGallery(){
   </section>
   <section class="mt-8 grid md:grid-cols-2 gap-4">
     <div class="kcard overflow-hidden">
-      <div class="h-48 relative">${ph(dW.key,'','每日壁纸',{ic:'star'})}</div>
-      <div class="p-4 flex items-center justify-between">
-        <div><div class="font-bold">每日壁纸</div><div class="text-[11px] text-[var(--txt-2)]">按日期随机推荐 · ${esc(dW.charName)}</div></div>
-        <button class="btn btn-cream px-4 py-1.5 text-xs" data-action="daily-wall">换一张</button>
+      <div class="h-48 relative" id="daily-wall-box">${dW?ph(dW.key,'','每日壁纸',{ic:'star'}):''}</div>
+      <div class="p-4 flex items-center justify-between gap-3">
+        <div id="daily-wall-meta"><div class="font-bold">每日壁纸</div><div class="text-[11px] text-[var(--txt-2)]" id="daily-wall-sub">按日期推荐${dW?' · '+esc(dW.label)+' · '+esc(dW.charName):''}</div></div>
+        <button class="btn btn-cream px-4 py-1.5 text-xs shrink-0" data-action="daily-wall">换一张</button>
       </div></div>
     <div class="kcard p-6">
       <div class="font-display text-lg mb-2">头像专区</div>
-      <p class="text-sm text-[var(--txt-2)] mb-4">适合做头像的 Q 版图（可点击放大/下载）。</p>
-      <div class="grid grid-cols-4 gap-3">
-        ${galleryItems('q').slice(0,8).map((g,i)=>`<div class="rounded-xl overflow-hidden cursor-pointer" data-lightbox="q" data-idx="${i}" role="button" aria-label="查看头像 ${i+1}"><div class="aspect-square">${ph(g.key,'','头像',{ic:'heart'})}</div></div>`).join('')}
+      <p class="text-sm text-[var(--txt-2)] mb-4">适合做头像的图（可点击放大）。</p>
+      <div class="grid grid-cols-3 gap-3">
+        ${galleryItems('q').slice(0,6).map((g,i)=>`<div class="rounded-xl overflow-hidden cursor-pointer" data-lightbox="q" data-idx="${i}" role="button" aria-label="查看 ${esc(g.label)}"><div class="aspect-square">${ph(g.key,'',g.label,{ic:'heart'})}</div></div>`).join('')}
       </div></div>
   </section>`;
 }
 function viewGalleryCat(catId){
   const c = GALLERY_CATS.find(x=>x.id===catId); if(!c) return view404();
   const items = galleryItems(catId);
+  const chars = galleryCharsOf(catId);
   return `
   <button class="btn btn-ghost px-4 py-1.5 text-sm mb-5" data-route="/gallery">← 返回图库</button>
   <header class="mb-4 flex items-center gap-3">
     <span class="w-11 h-11 rounded-2xl flex items-center justify-center text-white" style="background:${c.c}">${ICONS[c.icon]}</span>
     <div><h1 class="font-display text-3xl text-cocoa dark:text-cream">${c.name} <span class="text-base font-body text-sakura2">${items.length} 张</span></h1>
-    <div class="text-sm text-[var(--txt-2)]">${c.d} · 支持按角色筛选</div></div>
+    <div class="text-sm text-[var(--txt-2)]">${c.d} · 每张图都标注了真实场景与出场角色</div></div>
   </header>
   <div class="flex gap-2 mb-4 flex-wrap" id="gl-filter">
     <button class="btn btn-berry px-3 py-1 text-xs" data-glfilter="all">全部</button>
-    ${CHARACTERS.map(ch=>`<button class="btn btn-ghost px-3 py-1 text-xs" data-glfilter="${ch.id}">${esc(ch.nameZh)}</button>`).join('')}
+    ${chars.map(id=>`<button class="btn btn-ghost px-3 py-1 text-xs" data-glfilter="${id}">${esc(id==='group'?GALLERY_CHAR_NAME.group:(CHAR_MAP[id]?CHAR_MAP[id].nameZh:id))}</button>`).join('')}
   </div>
   <div class="wf" id="gl-waterfall">
-    ${items.map((g,i)=>`<div class="wf-item" data-gchar="${g.char}"><div class="kcard overflow-hidden cursor-pointer" data-lightbox="${catId}" data-idx="${i}" role="button" aria-label="${esc(g.label)}">
+    ${items.map((g,i)=>`<div class="wf-item" data-gchars="${g.chars.join(' ')||'none'}"><div class="kcard overflow-hidden cursor-pointer" data-lightbox="${catId}" data-idx="${i}" role="button" aria-label="${esc(g.label)}">
       <div class="h-44">${ph(g.key,'','',{ic:c.icon})}</div>
-      <div class="p-2.5 flex items-center justify-between text-[11px]"><span class="font-bold">${esc(g.label)}</span><span class="text-[var(--txt-2)]">${esc(g.charName)}</span></div></div></div>`).join('')}
-  </div>
-  <div class="text-[11px] text-[var(--txt-2)] mt-4">多分辨率下载提示：图片替换后可在详情页提供 1080P / 2K / 4K 三种链接（当前为占位）。</div>`;
+      <div class="p-2.5 text-[11px]"><div class="font-bold">${esc(g.label)}</div>
+      <div class="text-[var(--txt-2)] mt-0.5">${esc(g.scene||'')}${g.kind?' · '+esc(g.kind):''} · ${esc(g.charName)}</div></div></div></div>`).join('')}
+  </div>`;
 }
 
 /* ============================================================
@@ -3125,7 +3300,7 @@ function viewSecrets(){
 function viewFun(){
   return `
   <header class="mb-6"><h1 class="font-display text-3xl text-cocoa dark:text-cream">趣味互动 <span class="text-base font-body text-sakura2">Fun</span></h1>
-  <p class="text-sm text-[var(--txt-2)] mt-1">性格测试・猜歌游戏・台词生成器・入部测试，四个小游戏等你来玩。</p></header>
+  <p class="text-sm text-[var(--txt-2)] mt-1">性格测试・猜歌游戏・名台词生成器・入部测试・每日猜歌挑战・成就徽章，等你来玩。</p></header>
   ${noteDivider()}
   <section id="quiz" class="mb-10">
     <div class="kcard p-6 mb-4 flex items-center justify-between flex-wrap gap-3">
@@ -3164,13 +3339,28 @@ function viewFun(){
     </div>
     <div id="call-app"></div>
   </section>
-  <section id="exam" class="mb-4">
+  <section id="exam" class="mb-10">
     <div class="kcard p-6 mb-4 flex items-center justify-between flex-wrap gap-3">
       <div><div class="font-display text-xl">轻音部入部测试</div>
       <p class="text-sm text-[var(--txt-2)] mt-1">10 道原作知识题，测出你的「轻音部等级」。</p></div>
       <button class="btn btn-berry px-6 py-2.5 text-sm" data-action="start-exam">开始入部测试</button>
     </div>
     <div id="exam-app"></div>
+  </section>
+  <section id="daily" class="mb-10">
+    <div class="kcard p-6 mb-4 flex items-center justify-between flex-wrap gap-3">
+      <div><div class="font-display text-xl">每日猜歌挑战 <span class="pill pill-pink ml-1">每日一题</span></div>
+      <p class="text-sm text-[var(--txt-2)] mt-1">全站同一天同一首歌，30 秒试听最多猜 5 次；猜完可复制无剧透战报分享给朋友。</p></div>
+      <button class="btn btn-cream px-5 py-2 text-sm" id="daily-reload">刷新今日题目</button>
+    </div>
+    <div id="daily-app"></div>
+  </section>
+  <section id="achv" class="mb-4">
+    <div class="kcard p-6 mb-4">
+      <div class="font-display text-xl">成就徽章墙</div>
+      <p class="text-sm text-[var(--txt-2)] mt-1">听歌、留言、打call、猜歌……都会解锁徽章。进度存在本机，登录昵称后可同步到云端。</p>
+    </div>
+    <div id="achv-app"></div>
   </section>`;
 }
 
@@ -3225,6 +3415,14 @@ function viewArticle(id){
    ============================================================ */
 function viewGoods(){
   const tabs = [['cd','CD 专辑'],['figure','手办模型'],['merch','谷子周边'],['book','杂志书籍'],['collab','联动商品']];
+  const gkey = id=>({cd:'cds',figure:'figures',merch:'merch',book:'books',collab:'collab'})[id];
+  const gdesc = {
+    cd:'官方发行的单曲 / 专辑 / OST / 纪念 BOX',
+    figure:'黏土人・figma・比例手办等立体化商品',
+    merch:'徽章・挂画・拨片・服饰等店头谷子',
+    book:'漫画单行本・设定集・乐谱・场刊',
+    collab:'便利店 / 唱片店 / 发行方联动企划'
+  };
   return `
   <header class="mb-6"><h1 class="font-display text-3xl text-cocoa dark:text-cream">周边图鉴 <span class="text-base font-body text-sakura2">Goods</span></h1>
   <p class="text-sm text-[var(--txt-2)] mt-1">官方 CD / 手办 / 谷子 / 书籍 / 联动商品全图鉴（信息以官方发售资料为准）。</p></header>
@@ -3234,15 +3432,22 @@ function viewGoods(){
   </div>
   ${tabs.map(([id,name])=>`
   <section data-goods-sec="${id}" class="${id==='cd'?'':'hidden'}">
-    <h2 class="font-display text-lg text-cocoa dark:text-cream mb-4">${name}</h2>
+    <div class="kcard p-4 mb-4 flex items-center gap-4">
+      <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden shrink-0" style="background:rgba(139,115,85,.10)">${ph('goods_'+id,'','',{ic:id==='cd'?'note':id==='figure'?'star':'teacup',fit:'contain'})}</div>
+      <div class="min-w-0">
+        <h2 class="font-display text-lg text-cocoa dark:text-cream">${name}</h2>
+        <div class="text-[11px] text-[var(--txt-2)] mt-1">${gdesc[id]} · 共 ${(GOODS_DATA[gkey(id)]||[]).length} 条</div>
+        <div class="text-[11px] text-[var(--txt-2)] mt-1.5">${MEDIA['goods_'+id]?'左侧为该分类代表图（公开商品图，非站内官方素材）':'分类代表图待补充'}</div>
+      </div>
+    </div>
     <div class="grid md:grid-cols-2 gap-4">
-      ${(GOODS_DATA[id==='cd'?'cds':id==='figure'?'figures':id==='merch'?'merch':id==='book'?'books':'collab']||[]).map(g=>`
+      ${(GOODS_DATA[gkey(id)]||[]).map(g=>`
       <div class="kcard p-4 flex gap-4 items-start">${cornerIc(id==='cd'?'note':id==='figure'?'star':'teacup', '#FFB7C5')}
         <div class="w-16 h-16 rounded-xl shrink-0 flex items-center justify-center text-white text-lg" style="background:linear-gradient(135deg,#FFB7C5,#8B7355)">${(id==='cd'?ICONS.note:id==='figure'?ICONS.star:ICONS.teacup).replace('<svg','<svg class="w-7 h-7"')}</div>
         <div><div class="font-bold text-sm">${esc(g.t)}</div><div class="text-[11px] text-sakura2 mt-0.5">${esc(g.d)}</div><div class="text-xs text-[var(--txt-2)] mt-1">${esc(g.note||'')}</div></div></div>`).join('')}
     </div>
   </section>`).join('')}
-  <p class="text-[11px] text-[var(--txt-2)] mt-6">注：手办厂商、价格与发售详情待核实补充；图片均为占位，替换方式见 MEDIA 注释。</p>`;
+  <p class="text-[11px] text-[var(--txt-2)] mt-6">注：每个分类左侧是该类的代表图，取自公开商品图，仅作分类示意（并非本站官方素材）；手办厂商、价格与发售详情以官方公告为准，未核实处保持「待核实」。</p>`;
 }
 
 /* ============================================================
@@ -3302,6 +3507,7 @@ const Router = {
     else if(base==='/secrets') html = viewSecrets();
     else if(m=base.match(/^\/article\/(.+)$/)) html = viewArticle(m[1]);
     else if(base==='/fun') html = viewFun();
+    else if(base==='/wall') html = viewWall();
     else if(base==='/goods') html = viewGoods();
     else html = view404();
     $('#view').innerHTML = html;
@@ -3316,6 +3522,8 @@ const Router = {
     }
     /* 路由后初始化子模块 */
     PostRender.init(base);
+    /* 访问记录 → 成就（走遍全站 / 全员推） */
+    try{ ACHV.track('route', base); }catch(e){}
   }
 };
 /* 顶部导航激活态 */
@@ -3349,11 +3557,13 @@ function setPetals(on){
 /* 路由后初始化（各页局部交互） */
 const PostRender = {
   init(base){
-    if(base==='/'){ initBanner(); initStatsCounter(); }
+    if(base==='/'){ initBanner(); initStatsCounter(); WALL.mountHome(); }
     if(/^\/music\//.test(base) && base.includes('/music/')) initMusicCat();
-    if(/^\/episodes\/s1$|^\/episodes\/s2$/.test(base)) initEpSearch();
+    if(/^\/episodes\/(s1|s2|movie|ova)$/.test(base)) initEpSearch();
     if(/^\/gallery\//.test(base)) initGalleryFilter();
-    if(base==='/fun') GAMES.setup();
+    if(base==='/fun'){ GAMES.setup(); DAILY.mount(); ACHV.renderWall(); }
+    else { GAMES.stopClip(); DAILY.stopClip(); } /* 离开趣味页时停掉试听片段 */
+    if(base==='/wall'){ WALL.load(); WALL.wireForm(); }
     if(base==='/goods') initGoodsTabs();
   }
 };
@@ -3419,7 +3629,11 @@ function initGalleryFilter(){
     $$('#gl-filter [data-glfilter]').forEach(x=>{x.classList.remove('btn-berry');x.classList.add('btn-ghost');});
     b.classList.remove('btn-ghost'); b.classList.add('btn-berry');
     const v=b.getAttribute('data-glfilter');
-    $$('#gl-waterfall .wf-item').forEach(it=>{ it.style.display = (v==='all'||it.getAttribute('data-gchar')===v)?'':'none'; });
+    /* 一张图可能有多位角色（data-gchars 是空格分隔的 id 列表），按包含关系筛选 */
+    $$('#gl-waterfall .wf-item').forEach(it=>{
+      const cs = (it.getAttribute('data-gchars')||'').split(/\s+/).filter(Boolean);
+      it.style.display = (v==='all'||cs.includes(v)) ? '' : 'none';
+    });
   }));
 }
 /* 周边分类 tab */
@@ -3450,7 +3664,7 @@ const GalleryLightbox = {
         <div class="h-[58vh] rounded-xl overflow-hidden">${ph(cur.key,'','大图',{ic:'star'})}</div>
         <div class="flex items-center justify-between mt-3">
           <button class="btn btn-ghost px-4 py-1.5 text-sm" data-lb-prev>← 上一张</button>
-          <div class="text-xs text-[var(--txt-2)]">${esc(cur.charName)} · 分辨率：1080P / 2K / 4K（下载链接待补充）</div>
+          <div class="text-xs text-[var(--txt-2)] text-center">${esc(cur.charName)}${cur.scene?' · '+esc(cur.scene):''}${cur.kind?' · '+esc(cur.kind):''}</div>
           <button class="btn btn-ghost px-4 py-1.5 text-sm" data-lb-next>下一张 →</button></div>
         <div class="flex justify-center gap-2 mt-3">${items.map((x,i)=>'<button data-lb-dot="'+i+'" class="w-4 h-4 rounded-full '+(i===GalleryLightbox._i?'bg-sakura2':'bg-[var(--clay)]')+'"></button>').join('')}</div>
       </div>`;
@@ -3611,13 +3825,25 @@ const Actions = {
   'fav-song'(el){ const s=SONG_MAP[el.getAttribute('data-song')]; if(s){ Playlists.toggleFav(s.id); } },
   'play-ep'(el){ const e=EP_MAP[el.getAttribute('data-ep')]; Player.playQueue(e.songs.map(id=>SONG_MAP[id]).filter(Boolean), false); },
   'shuffle-chara'(el){ const c=CHAR_MAP[el.getAttribute('data-chara')]; Player.playQueue(c.charSongs.map(id=>SONG_MAP[id]).filter(Boolean), true); },
-  'daily-wall'(el){ toast('每日壁纸已刷新（占位演示，替换 MEDIA 图片后生效）'); },
+  'daily-wall'(el){
+    const box=$('#daily-wall-box'), sub=$('#daily-wall-sub');
+    if(!box) return;
+    const pool = galleryItems('wall').filter(g=>g.url);
+    if(!pool.length) return;
+    /* 真的换一张：随机挑，且尽量避开当前这张 */
+    const img = box.querySelector('img');
+    const cur = img ? img.getAttribute('src') : '';
+    let pick = pool[(Math.random()*pool.length)|0];
+    if(pool.length>1){ let guard=0; while(pick.url===cur && guard++<12) pick = pool[(Math.random()*pool.length)|0]; }
+    box.innerHTML = ph(pick.key,'','每日壁纸',{ic:'star'});
+    if(sub) sub.textContent = '已换一张 · '+pick.label+' · '+pick.charName;
+  },
   'start-quiz'(el){ GAMES.startQuiz(); },
   'start-guess'(el){ GAMES.startGuess(el.getAttribute('data-diff')); },
   'gen-quote'(el){ GAMES.genQuote(); },
   'start-exam'(el){ GAMES.startExam(); },
   'import-lyric'(el){ openLyricModal(el.getAttribute('data-song')); },
-  'clear-lyric'(el){ const id=el.getAttribute('data-song'); LyricStore.clear(id); Router.render((location.hash||'#/').slice(2)||'/'); toast('已清除导入的歌词'); }
+  'clear-lyric'(el){ const id=el.getAttribute('data-song'); LyricStore.clear(id); Router.render(normRoute(location.hash)); toast('已清除导入的歌词'); }
 };
 
 /* 歌词导入弹窗（用户自备歌词，仅存本机 localStorage） */
@@ -3646,7 +3872,7 @@ function openLyricModal(songId){
       LyricStore.set(songId, lines);
       mask.classList.remove('show');
       toast('已保存 '+lines.length+' 行歌词（仅本机）');
-      Router.render((location.hash||'#/').slice(2)||'/');
+      Router.render(normRoute(location.hash));
       if(Player.song && Player.song.id===songId) renderLyricsPanel();
     }
   };
@@ -3679,6 +3905,20 @@ function initKeyboard(){
     else if(ev.key==='/'||ev.code==='Slash'){ ev.preventDefault(); $('#search-btn').click(); }
   });
 }
+/* 首次交互恢复播放（自动播放被阻止后的兜底） */
+let _firstGestureArmed = false;
+function armFirstGestureResume(){
+  if(_firstGestureArmed) return;
+  _firstGestureArmed = true;
+  const onFirst = ()=>{
+    document.removeEventListener('click', onFirst);
+    document.removeEventListener('keydown', onFirst);
+    _firstGestureArmed = false;
+    if(!Player.isPlaying) Player.play();
+  };
+  document.addEventListener('click', onFirst);
+  document.addEventListener('keydown', onFirst);
+}
 /* hash 前进后退 */
 function normRoute(hash){
   const raw = String(hash||'#/').replace(/^#/, '');
@@ -3692,13 +3932,14 @@ function initHash(){
 
 /* ============================================================
    ⑨ 播放器引擎 PLAYER
-   - 音源优先级：song.audio 自填真实音频 > MEDIA.audio 映射 > PREVIEWS iTunes官方30秒试听 > WebAudio 合成演示音
+   - 音源优先级：song.audio 自填真实音频 > MEDIA.audio 映射 > PREVIEWS iTunes官方30秒试听
+     三者都没有的曲目视为「暂无音源」：不再用合成音兜底，UI 标注并在点击/切换时自动跳过
    - 五种模式：顺序 / 列表循环 / 单曲循环 / 完全随机 / 智能乱序
    - 全局不中断：路由切换不清空播放状态
    ============================================================ */
 
 /* iTunes / Apple Music 官方公开的 30 秒试听片段直链（key 为 SONGS 的 id）。
-   版权归原权利人所有，仅用于在线试听、不提供下载；缺失或加载失败时自动回退合成演示音。 */
+   版权归原权利人所有，仅用于在线试听、不提供下载；没有试听的曲目标注「暂无音源」。 */
 const PREVIEWS = {
   "cagayake":'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/9a/fb/61/9afb61f8-53c6-85e7-98b4-5b4860d448ed/mzaf_14500538825935710941.plus.aac.p.m4a',
   "gogomaniac":'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/b2/18/c9/b218c9f0-bbfe-4279-17af-edc8543a8f33/mzaf_64163119980499326.plus.aac.p.m4a',
@@ -3759,57 +4000,29 @@ function getCtx(){
   }
   return _ctx;
 }
-/* 由歌曲 id 派生固定音阶（保证同一首歌旋律一致，可被猜歌游戏复用） */
-function melodyFor(song){
-  const scales = [[0,2,4,7,9],[0,3,5,7,10],[0,2,5,7,9],[0,2,3,7,8]];
-  let h=0; for(const ch of String(song.id)) h=(h*31+ch.charCodeAt(0))>>>0;
-  const scale = scales[h%scales.length];
-  const base = 220 + (h%5)*30; // A3 附近
-  const notes = Array.from({length:16}, (_,i)=>{
-    const step = (i*5 + ((h>>(i%8))&3)) % scale.length;
-    return base * Math.pow(2, scale[step]/12);
-  });
-  return {notes, tempo: song.tempo||112};
+/* 音源可用性判定 ------------------------------------------------------------
+   合成演示音（melodyFor / synthStart / synthStop）已整体移除：没有真实音源的曲目
+   不再用 WebAudio 伪造旋律，改为在 UI 上标注「暂无音源」，点击时自动跳到队列里
+   下一首可播放的曲目。封面与曲名等信息照常展示。
+   注意：getCtx() / _masterGain 仍然保留，仅供「打call模拟器」的短促提示音
+   callTone() 使用，与歌曲播放无关。 */
+function songAudioUrl(song){
+  if(!song) return '';
+  return song.audio || (MEDIA.audio && MEDIA.audio[song.id]) || PREVIEWS[song.id] || '';
 }
-/* 合成演示音：轻柔 16 音循环（attack/release≥5ms，音量克制） */
-function synthStart(song){
-  const ctx = getCtx(); ctx.resume();
-  const {notes, tempo} = melodyFor(song);
-  const beat = 60/tempo;
-  let step = 0, stop=false;
-  const playStep = ()=>{
-    if(stop) return;
-    const f = notes[step % notes.length];
-    const osc = ctx.createOscillator(), g = ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.value = f;
-    const now = ctx.currentTime;
-    g.gain.setValueAtTime(0.0001, now);
-    g.gain.linearRampToValueAtTime(0.22, now+0.012);
-    g.gain.exponentialRampToValueAtTime(0.0001, now+beat*1.6);
-    osc.connect(g); g.connect(_masterGain);
-    osc.start(now); osc.stop(now+beat*1.8);
-    /* 每 4 步加一个低音垫音 */
-    if(step%4===0){
-      const b = ctx.createOscillator(), bg = ctx.createGain();
-      b.type='sine'; b.frequency.value = f/2;
-      bg.gain.setValueAtTime(0.0001, now);
-      bg.gain.linearRampToValueAtTime(0.10, now+0.02);
-      bg.gain.exponentialRampToValueAtTime(0.0001, now+beat*2.5);
-      b.connect(bg); bg.connect(_masterGain);
-      b.start(now); b.stop(now+beat*2.6);
-    }
-    step++;
-  };
-  const timer = setInterval(playStep, beat*1000);
-  playStep();
-  Player._synth = {stop(){ stop=true; clearInterval(timer); }};
+/* 运行期加载失败的曲目：本次会话内一律视为无音源，避免反复重试同一个死链 */
+const _deadAudio = new Set();
+/* 连续加载失败计数：用于识别「整站断网」，避免一路跳完整个曲库 */
+let _audioFailStreak = 0;
+function songPlayable(song){
+  if(!song) return false;
+  if(_deadAudio.has(song.id)) return false;
+  return !!songAudioUrl(song);
 }
-function synthStop(){ if(Player._synth){ Player._synth.stop(); Player._synth=null; } }
 
 const Player = {
   queue:[], idx:0, mode:'order', isPlaying:false,
-  song:null, _audio:null, _synth:null, _virtual:0, _dur:0, _tick:null,
+  song:null, _audio:null, _noSource:false, _virtual:0, _dur:0, _tick:null,
   _notesTimer:null, history:[], sleepUntil:0, deskMode:false, lockShuffle:false,
   volume:22, _muted:false, _saveTick:0,
 
@@ -3864,6 +4077,32 @@ const Player = {
     return true;
   },
 
+  /* 从 from（含）向后找第一个可播放的队列下标；找不到返回 -1 */
+  _nextPlayableFrom(from){
+    for(let i=Math.max(0,from); i<this.queue.length; i++) if(songPlayable(this.queue[i])) return i;
+    return -1;
+  },
+  /* 队列里没有任何可播放曲目时的统一收尾（封面与曲名照常保留展示） */
+  _nothingPlayable(scope){
+    this.isPlaying = false;
+    const pl = $('#player'); if(pl) pl.classList.remove('playing');
+    this._render();
+    toast((scope||'当前队列')+'里没有可播放的曲目（这些歌缺少官方试听片段）');
+  },
+  /* 智能乱序专用：队列里已经找不到「不同的下一首」时（例如歌单只加了 1 首），
+     从全曲库补一批可播放的曲目进队列，让后续 ⏭ / 自动播完都能正常往下走。
+     返回本次补入的数量；没有可补的返回 0。 */
+  _replenishFromLibrary(){
+    const inQueue = new Set(this.queue.map(s=>s.id));
+    const pool = SONGS.filter(s=>songPlayable(s) && !inQueue.has(s.id));
+    if(!pool.length) return 0;
+    const add = smartShuffle(pool, this.song ? this.song.id : null);
+    this.queue = this.queue.concat(add);
+    /* _origQueue 同步为补全后的队列，保证下次队尾重整时用的是同一个池子 */
+    this._origQueue = this.queue.slice();
+    toast('队列已听到底，从全曲库为你推荐了 '+add.length+' 首 ♪');
+    return add.length;
+  },
   /* 从列表开始播放（shuffle=true 时使用智能乱序） */
   playQueue(list, shuffle){
     this._origQueue = list.slice();
@@ -3871,46 +4110,105 @@ const Player = {
     if(!this.queue.length){ toast('这个列表暂时没有可播放的曲目'); return; }
     if(shuffle) this.queue = smartShuffle(this.queue, null);
     this.idx = 0;
-    this._load(this.queue[0]);
+    /* 首曲没有音源时自动往后找第一首可播放的，而不是静默失败 */
+    if(!songPlayable(this.queue[0])){
+      const ni = this._nextPlayableFrom(0);
+      if(ni < 0){
+        /* 先停掉正在播放的音频，再收尾（不能只换 UI 不管声音） */
+        this.pause();
+        this.song = this.queue[0]; this._virtual = 0; this._dur = 0; this._noSource = true;
+        return this._nothingPlayable('这个列表');
+      }
+      this.idx = ni;
+      toast('列表首曲暂无音源，已从《'+this.queue[ni].t+'》开始播放');
+    }
+    this._load(this.queue[this.idx]);
   },
-  /* 播放单曲（在队列中则跳转，否则建立单曲队列） */
+  /* 播放单曲（在队列中则跳转，否则建立单曲队列）；
+     该曲没有音源时自动跳到队列里下一首可播放的 */
   playSong(song){
+    if(!song) return;
+    try{ ACHV.track('play', song.id); }catch(e){}
     const i = this.queue.findIndex(s=>s.id===song.id);
-    if(i>=0){ this.idx=i; this._load(song); }
-    else { this._origQueue=[song]; this.queue=[song]; this.idx=0; this._load(song); }
+    if(i>=0){ this.idx=i; }
+    else { this._origQueue=[song]; this.queue=[song]; this.idx=0; }
+    if(!songPlayable(song)){
+      const ni = this._nextPlayableFrom(this.idx+1);
+      if(ni < 0){
+        /* 整个队列都不可播：必须先停掉当前正在播放的音频（否则会出现
+           「界面显示新歌、耳朵里还是上一首」），再把这首显示出来保留封面与曲名 */
+        this.pause();
+        this.song = song; this._virtual = 0; this._dur = 0; this._noSource = true;
+        return this._nothingPlayable('当前队列');
+      }
+      this.idx = ni;
+      toast('《'+song.t+'》暂无音源，已跳到《'+this.queue[ni].t+'》');
+    }
+    this._load(this.queue[this.idx]);
   },
   /* 全曲库乱序 */
   shuffleAll(){
     this._origQueue = SONGS.slice();
     const list = smartShuffle(SONGS.slice(), null);
     this.queue = list; this.idx = 0;
-    this._load(list[0]);
+    if(!songPlayable(this.queue[0])){
+      const ni = this._nextPlayableFrom(0);
+      if(ni < 0){
+        this.pause();
+        this.song = this.queue[0]; this._virtual = 0; this._dur = 0; this._noSource = true;
+        return this._nothingPlayable('全曲库');
+      }
+      this.idx = ni;
+    }
+    this._load(this.queue[this.idx]);
     toast('全曲库大乱斗开始！共 '+list.length+' 首 ♪');
   },
   toggle(){ this.isPlaying ? this.pause() : this.play(); },
   play(){
-    if(!this.song){ const s = SONGS.find(x=>x.cat==='op') || SONGS[0]; this.playSong(s); return; }
-    this.isPlaying = true;
-    const el = $('#player'); el.classList.add('playing');
-    if(this._audio){
-      /* 从「上次播放」恢复时，音频元数据到位后跳到存档位置（只做一次） */
-      if(this._pendingResume>1){
-        const want=this._pendingResume;
-        const applySeek=()=>{ try{ if(this._audio && isFinite(this._audio.duration)) this._audio.currentTime=Math.min(want, Math.max(0,this._audio.duration-0.5)); }catch(e){} this._pendingResume=0; };
-        if(this._audio.readyState>=1) applySeek();
-        else this._audio.addEventListener('loadedmetadata', applySeek, {once:true});
-      }
-      this._audio.play().catch(()=>toast('浏览器阻止了自动播放，请手动点击播放'));
+    if(!this.song){
+      const s = SONGS.find(x=>x.cat==='op' && songPlayable(x)) || SONGS.find(songPlayable);
+      if(!s) return;
+      this.playSong(s); return;
     }
-    else synthStart(this.song);
-    this._startTick(); this._startNotes();
-    this._render();
+    /* 从存档恢复后尚未建立音频对象：补一次 _load，让它走正常音源路径 */
+    if(!this._audio && !this._noSource){ this._load(this.song); return; }
+    /* 确实没有音源：不出声，但封面与曲名照常保留展示 */
+    if(!this._audio){
+      this.isPlaying = false;
+      const pl=$('#player'); if(pl) pl.classList.remove('playing');
+      this._render();
+      toast('《'+this.song.t+'》暂无音源（没有可用的官方试听片段）');
+      return;
+    }
+    const onSuccess = ()=>{
+      this.isPlaying = true;
+      $('#player').classList.add('playing');
+      this._startTick(); this._startNotes();
+      this._render();
+    };
+    const onBlocked = ()=>{
+      this.isPlaying = false;
+      $('#player').classList.remove('playing');
+      this._render();
+      toast('浏览器阻止了自动播放，点击页面任意位置即可开始 ♪');
+      armFirstGestureResume();
+    };
+    /* 从「上次播放」恢复时，音频元数据到位后跳到存档位置（只做一次） */
+    if(this._pendingResume>1){
+      const want=this._pendingResume;
+      const applySeek=()=>{ try{ if(this._audio && isFinite(this._audio.duration)) this._audio.currentTime=Math.min(want, Math.max(0,this._audio.duration-0.5)); }catch(e){} this._pendingResume=0; };
+      if(this._audio.readyState>=1) applySeek();
+      else this._audio.addEventListener('loadedmetadata', applySeek, {once:true});
+    }
+    this._audio.play().then(()=>{
+      if(this._audio && !this._audio.paused) onSuccess();
+      else onBlocked();
+    }).catch(onBlocked);
   },
   pause(){
     this.isPlaying = false;
-    $('#player').classList.remove('playing');
+    const pl=$('#player'); if(pl) pl.classList.remove('playing');
     if(this._audio) this._audio.pause();
-    synthStop();
     this._stopTick(); this._stopNotes();
     this._save(true);
     this._render();
@@ -3923,29 +4221,63 @@ const Player = {
     const m = this.mode;
     if(m==='single' && auto){ this._load(this.queue[this.idx]); return; }
     if(m==='random'){
-      if(this.queue.length>1){ let n; do{ n=(Math.random()*this.queue.length)|0; }while(n===this.idx); this.idx=n; }
+      const cand = this.queue.map((s,i)=>i).filter(i=>songPlayable(this.queue[i]));
+      if(!cand.length) return this._nothingPlayable('当前队列');
+      if(cand.length>1){ let n; do{ n=cand[(Math.random()*cand.length)|0]; }while(n===this.idx); this.idx=n; }
+      else this.idx = cand[0];
       this._load(this.queue[this.idx]); return;
     }
     if(m==='smart'){
-      if(this.idx < this.queue.length-1){ this.idx++; this._load(this.queue[this.idx]); }
-      else { const list=smartShuffle(this._origQueue||this.queue, this.song?this.song.id:null); this.queue=list; this.idx=0; this._load(list[0]); }
+      /* ① 先在本队列里找下一首能播的 */
+      const ni = this._nextPlayableFrom(this.idx+1);
+      if(ni >= 0){ this.idx = ni; this._load(this.queue[this.idx]); return; }
+      /* ② 队列里已经没有「不同的下一首」了（典型场景：歌单只加了 1 首）。
+            从全曲库推荐一批补进队列——这是「智能乱序」区别于「顺序播放」的地方：
+            顺序播放走到队尾就停，智能乱序则继续推荐。 */
+      const added = this._replenishFromLibrary();
+      if(!added){ this.pause(); return; }
+      this.idx = this.queue.length - added;
+      this._load(this.queue[this.idx]);
       return;
     }
-    /* loop / single（手动）：队尾接回队首，和 prev() 的环形回绕保持对称 */
-    if(m==='loop'||m==='single'){ this.idx = (this.idx+1)%this.queue.length; this._load(this.queue[this.idx]); return; }
-    /* order */
-    if(this.idx < this.queue.length-1){ this.idx++; this._load(this.queue[this.idx]); }
+    /* loop / single（手动）：队尾接回队首，和 prev() 的环形回绕保持对称。
+       环形搜索一圈，跳过没有音源的曲目 */
+    if(m==='loop'||m==='single'){
+      for(let k=1;k<=this.queue.length;k++){
+        const n = (this.idx+k)%this.queue.length;
+        if(songPlayable(this.queue[n])){ this.idx=n; this._load(this.queue[this.idx]); return; }
+      }
+      return this._nothingPlayable('当前队列');
+    }
+    /* order：顺序播放，走到末尾就停（不跨队列推荐，保持「顺序」语义）。
+       只跳过没有音源的曲目 */
+    const ni = this._nextPlayableFrom(this.idx+1);
+    if(ni >= 0){ this.idx = ni; this._load(this.queue[this.idx]); }
     else this.pause();
   },
   prev(){
     if(!this.queue.length) return;
     if(this.mode==='random'){
-      if(this.queue.length>1){ let n; do{ n=(Math.random()*this.queue.length)|0; }while(n===this.idx); this.idx=n; }
+      const cand = this.queue.map((s,i)=>i).filter(i=>songPlayable(this.queue[i]));
+      if(!cand.length) return this._nothingPlayable('当前队列');
+      if(cand.length>1){ let n; do{ n=cand[(Math.random()*cand.length)|0]; }while(n===this.idx); this.idx=n; }
+      else this.idx = cand[0];
       this._load(this.queue[this.idx]); return;
     }
-    if(this.mode==='order'||this.mode==='smart'){ if(this.idx>0){ this.idx--; this._load(this.queue[this.idx]); } return; }
-    this.idx = (this.idx-1+this.queue.length)%this.queue.length;
-    this._load(this.queue[this.idx]);
+    /* order / smart：向前回退，跳过没有音源的曲目；已在队首则不动 */
+    if(this.mode==='order'||this.mode==='smart'){
+      for(let k=1;k<=this.idx;k++){
+        const n = this.idx-k;
+        if(songPlayable(this.queue[n])){ this.idx=n; this._load(this.queue[this.idx]); return; }
+      }
+      return;
+    }
+    /* loop / single：环形回绕 */
+    for(let k=1;k<=this.queue.length;k++){
+      const n = (this.idx-k+this.queue.length)%this.queue.length;
+      if(songPlayable(this.queue[n])){ this.idx=n; this._load(this.queue[this.idx]); return; }
+    }
+    this._nothingPlayable('当前队列');
   },
   seek(sec){
     const t = Math.max(0, +sec||0);
@@ -3979,25 +4311,56 @@ const Player = {
   },
   /* 载入歌曲；resumeSec 仅用于「恢复上次播放」时定位，正常点击播放不传 */
   _load(song, resumeSec){
+    if(!song) return;
     this.pause();
-    /* 释放上一首的真实音频对象，避免串音 */
-    if(this._audio){ try{ this._audio.pause(); this._audio.removeAttribute('src'); this._audio.load(); }catch(e){} this._audio=null; }
+    /* 释放上一首的音频对象，避免串音。
+       必须先摘掉事件回调：removeAttribute('src') + load() 可能触发 onerror，
+       而此刻 this.song 还是上一首，回调里再调 next() 会造成重入 */
+    if(this._audio){
+      try{
+        this._audio.onerror = null; this._audio.onended = null; this._audio.onloadedmetadata = null;
+        this._audio.pause(); this._audio.removeAttribute('src'); this._audio.load();
+      }catch(e){}
+      this._audio = null;
+    }
     this.song = song;
     this._virtual = 0; this._dur = 0;
     const resume = Math.max(0, +resumeSec||0);
     /* 历史记录（最近20首） */
     this.history = [song.id, ...this.history.filter(id=>id!==song.id)].slice(0,20);
-    /* 音源优先级：song.audio 自填 > MEDIA.audio 映射 > PREVIEWS iTunes官方30秒试听 > 合成演示音 */
-    const url = song.audio || (MEDIA.audio && MEDIA.audio[song.id]) || (PREVIEWS[song.id] || '');
-    if(url){
+    /* 音源优先级：song.audio 自填 > MEDIA.audio 映射 > PREVIEWS iTunes官方30秒试听。
+       三者都没有（或已确认加载失败）时标记 _noSource：UI 显示「暂无音源」且不出声 */
+    const url = songAudioUrl(song);
+    this._noSource = !url || _deadAudio.has(song.id);
+    if(!this._noSource){
       this._audio = new Audio();
       this._audio.src = url;
       this._audio.preload = 'auto';
       this._audio.volume = (this.volume/100)*0.45;
       this._audio.muted = !!this._muted;
       this._audio.onended = ()=>this.next(true);   /* 自动播完：单曲循环时重播本曲 */
-      this._audio.onloadedmetadata = ()=>{ if(this._audio && isFinite(this._audio.duration) && this._audio.duration>0){ this._dur = this._audio.duration; if(resume) this.seek(resume); this._render(); } };
-      this._audio.onerror = ()=>{ toast('试听加载失败，已切换为演示合成音'); this._audio=null; if(this.song===song) synthStart(song); };
+      this._audio.onloadedmetadata = ()=>{
+        _audioFailStreak = 0;
+        if(this._audio && isFinite(this._audio.duration) && this._audio.duration>0){ this._dur = this._audio.duration; if(resume) this.seek(resume); this._render(); }
+      };
+      /* 试听加载失败：本次会话内记为死链并跳到下一首可播放的；
+         连续失败过多（多半是整站断网）就停下提示，避免一路跳完整个曲库 */
+      this._audio.onerror = ()=>{
+        _deadAudio.add(song.id);
+        this._audio = null;
+        this._noSource = true;
+        _audioFailStreak++;
+        if(_audioFailStreak >= 6){
+          this.isPlaying = false;
+          const pl=$('#player'); if(pl) pl.classList.remove('playing');
+          this._stopTick();
+          this._render();
+          toast('试听片段连续加载失败，请检查网络后重试');
+          return;
+        }
+        toast('《'+song.t+'》试听加载失败，已跳到下一首');
+        if(this.song === song) this.next();
+      };
     }
     if(resume) this._virtual = resume;
     this._render();
@@ -4007,7 +4370,13 @@ const Player = {
   _render(){
     const s = this.song;
     $('#p-title').textContent = s ? s.t : '未在播放';
-    $('#p-sub').textContent = s ? (s.unit+' · '+s.tZh+((!s.audio && PREVIEWS[s.id])?' · 官方30秒试听':'')) : '放課後ティータイム 応援站';
+    /* 副标题：标明音源类型；没有官方试听的曲目明确显示「暂无音源」 */
+    let srcTag = '';
+    if(s){
+      if(this._noSource || !songPlayable(s)) srcTag = ' · 暂无音源';
+      else if(!s.audio && !(MEDIA.audio && MEDIA.audio[s.id]) && PREVIEWS[s.id]) srcTag = ' · 官方30秒试听';
+    }
+    $('#p-sub').textContent = s ? (s.unit+' · '+s.tZh+srcTag) : '放課後ティータイム 応援站';
     $('#p-toggle').innerHTML = this.isPlaying ? ICONS.pause : ICONS.play;
     $('#p-mode').textContent = this.modeName();
     const fav = Playlists.isFav(s? s.id:'');
@@ -4021,16 +4390,14 @@ const Player = {
     this.renderQueue(); this.renderHistory(); this.renderPlaylists();
     if(this.deskMode) this._updateDeskLyric();
   },
-  /* 进度 tick（合成音虚拟进度 / 真实音频 realtime） */
+  /* 进度 tick：只跟随真实音频对象。合成音已移除，没有音频时不再需要虚拟进度 */
   _startTick(){
     this._stopTick();
+    if(!this._audio) return;
     this._tick = setInterval(()=>{
       if(!this.isPlaying) return;
-      let t;
-      if(this._audio && !isNaN(this._audio.duration)) t = this._audio.currentTime;
-      else { this._virtual += 0.5; t = this._virtual; }
-      /* 真实音频/试听由 onended 触发切歌；仅合成演示音用虚拟进度自动切 */
-      if(!this._audio && t >= this.song.dur){ this.next(true); return; }
+      if(!this._audio) return;
+      const t = this._audio.currentTime;
       $('#p-progress').value = Math.min(t, this._dur || this.song.dur);
       $('#p-cur').textContent = fmtD(t);
       this._highlightLyric(t);
@@ -4082,7 +4449,7 @@ const Player = {
     host.innerHTML = this.queue.length
       ? '<div class="flex items-center justify-between mb-2"><span class="text-xs text-[#C9BBA6]">队列 '+this.queue.length+' 首</span>'
         +'<button class="text-[11px] text-[#FFB7C5] underline" data-action="restore-order">恢复原序</button></div>'
-        + this.queue.map((s,i)=>`<div class="queue-item ${i===this.idx?'playing':''}" data-qidx="${i}" role="button"><span class="text-[#C9BBA6] w-5">${i+1}</span><span class="q-name truncate flex-1">${esc(s.t)}</span><span class="text-[11px] text-[#C9BBA6]">${fmtD(s.dur)}</span></div>`).join('')
+        + this.queue.map((s,i)=>`<div class="queue-item ${i===this.idx?'playing':''}" data-qidx="${i}" role="button"><span class="text-[#C9BBA6] w-5">${i+1}</span><span class="q-name truncate flex-1">${esc(s.t)}</span>${songPlayable(s)?'':'<span class="text-[10px] text-[#C9BBA6] mr-1" title="暂无音源，播放时会自动跳过">无音源</span>'}<span class="text-[11px] text-[#C9BBA6]">${fmtD(s.dur)}</span></div>`).join('')
       : '<div class="text-sm text-[#C9BBA6] p-4 text-center">队列为空，去音乐中心点首歌吧。</div>';
   },
   renderHistory(){
@@ -4168,7 +4535,11 @@ const Playlists = {
       this.pl = d.pl||{}; this.favs = d.favs||[];
     }catch(e){ this.pl={}; this.favs=[]; }
   },
-  save(){ try{ localStorage.setItem('kon-playlists', JSON.stringify({pl:this.pl, favs:this.favs})); }catch(e){} },
+  save(){
+    try{ localStorage.setItem('kon-playlists', JSON.stringify({pl:this.pl, favs:this.favs})); }catch(e){}
+    try{ ACHV.track('playlist', this.total()); }catch(e){}
+  },
+  total(){ return this.favs.length + Object.keys(this.pl).reduce((a,k)=>a+(this.pl[k]||[]).length, 0); },
   isFav(id){ return this.favs.includes(id); },
   /* 收藏 id → 曲目对象（过滤掉已下架/改名的 id，避免出现空白行） */
   favSongs(){ return this.favs.map(id=>SONG_MAP[id]).filter(Boolean); },
@@ -4314,7 +4685,10 @@ function initPlayerStateUI(){
 const LyricStore = {
   data:{},
   load(){ try{ this.data = JSON.parse(localStorage.getItem('kon-lyrics')||'{}'); }catch(e){ this.data={}; } },
-  save(){ try{ localStorage.setItem('kon-lyrics', JSON.stringify(this.data)); }catch(e){} },
+  save(){
+    try{ localStorage.setItem('kon-lyrics', JSON.stringify(this.data)); }catch(e){}
+    try{ if(Object.keys(this.data||{}).length) ACHV.track('lyrics'); }catch(e){}
+  },
   has(id){ return !!(this.data[id] && this.data[id].length); },
   get(id){
     if(this.data[id] && this.data[id].length) return this.data[id];
@@ -4422,12 +4796,26 @@ const GAMES = {
     render();
   },
 
-  /* ---- 猜歌名游戏 ---- */
+  /* ---- 猜歌名游戏 ----
+     音源改用 iTunes 官方 30 秒试听片段：只从「有试听」的曲目里出题，
+     每段只播前 10 秒，到点自动停。原先的合成音旋律已整体移除。 */
+  _clip:null, _clipTimer:null,
+  stopClip(){
+    if(this._clipTimer){ clearTimeout(this._clipTimer); this._clipTimer = null; }
+    if(this._clip){ try{ this._clip.pause(); }catch(e){} this._clip = null; }
+  },
   startGuess(diff){
     const app=$('#guess-app'); if(!app) return;
-    const pool=SONGS.filter(s=>!s.t.startsWith('K-ON!')&&s.t!=='映画「けいおん!」オリジナルサウンドトラック'&&!s.lyricNote);
-    let score=0, round=1, target=null, synthTimer=null, played=false;
-    const optN = diff==='easy'?4 : diff==='normal'?6:8;
+    GAMES.stopClip();
+    /* 只从「有官方试听」的曲目里出题——没有音源的歌无法靠听来猜 */
+    const pool=SONGS.filter(s=>songPlayable(s) && !s.t.startsWith('K-ON!') && !s.lyricNote);
+    if(pool.length < 4){
+      app.innerHTML='<div class="kcard p-6 text-sm text-[var(--txt-2)]">曲库中可试听的曲目不足，暂时无法开始猜歌。</div>';
+      return;
+    }
+    const CLIP_SEC = 10; /* 每段只放前 10 秒 */
+    let score=0, round=1, target=null, played=false;
+    const optN = Math.min(diff==='easy'?4 : diff==='normal'?6:8, pool.length);
     const render=()=>{
       target = pool[Math.floor(Math.random()*pool.length)];
       const opts=[target, ...pool.filter(s=>s.id!==target.id).sort(()=>Math.random()-0.5).slice(0,optN-1)].sort(()=>Math.random()-0.5);
@@ -4436,43 +4824,36 @@ const GAMES = {
         <div class="flex items-center justify-between mb-4"><span class="pill pill-mizu">第 ${round} 题 · 得分 ${score}</span>
         <span class="pill pill-brown">难度：${diff==='easy'?'简单':diff==='normal'?'普通':'困难'}</span></div>
         <div class="text-center py-6">
-          <button class="btn btn-berry px-8 py-3" data-guess-play>▶ 播放旋律</button>
-          <p class="text-xs text-[var(--txt-2)] mt-2">点击播放前奏/旋律（演示合成音），猜猜是哪首歌？</p>
+          <button class="btn btn-berry px-8 py-3" data-guess-play>▶ 播放试听片段</button>
+          <p class="text-xs text-[var(--txt-2)] mt-2">播放 iTunes 官方试听的前 ${CLIP_SEC} 秒，猜猜是哪首歌？</p>
         </div>
         <div class="grid sm:grid-cols-2 gap-3">
           ${opts.map(s=>`<button class="btn btn-cream px-4 py-3 text-sm justify-start" data-guess-opt="${s.id}">${esc(s.t)}</button>`).join('')}
         </div></div>`;
       played=false;
     };
-    const playMelody=()=>{
-      synthStop();
-      if(Player.isPlaying) Player.pause();
-      const ctx=getCtx(); ctx.resume();
-      const {notes,tempo}=melodyFor(target);
-      const beat=60/tempo; let step=0;
-      synthTimer=setInterval(()=>{
-        const f=notes[step%notes.length];
-        const osc=ctx.createOscillator(),g=ctx.createGain();
-        osc.type='triangle'; osc.frequency.value=f;
-        const now=ctx.currentTime;
-        g.gain.setValueAtTime(0.0001,now); g.gain.linearRampToValueAtTime(0.2,now+0.012); g.gain.exponentialRampToValueAtTime(0.0001,now+beat*1.5);
-        osc.connect(g); g.connect(_masterGain); osc.start(now); osc.stop(now+beat*1.7);
-        step++;
-      },beat*1000);
-      Player._synth={ stop(){ clearInterval(synthTimer); } }; // 让 synthStop 能停游戏旋律
+    const playClip=()=>{
+      GAMES.stopClip();
+      if(Player.isPlaying) Player.pause(); /* 避免和主播放器同时出声 */
+      const url = songAudioUrl(target); if(!url) return;
+      const a = new Audio(url);
+      a.volume = 0.55;
+      GAMES._clip = a;
+      a.play().catch(()=>toast('浏览器阻止了自动播放，请再点一次'));
+      GAMES._clipTimer = setTimeout(()=>GAMES.stopClip(), CLIP_SEC*1000);
     };
     app.onclick=ev=>{
       const p=ev.target.closest('[data-guess-play]');
-      if(p){ if(!played){ playMelody(); played=true; } else { synthStop(); played=false; } return; }
+      if(p){ if(!played){ playClip(); played=true; } else { GAMES.stopClip(); played=false; } return; }
       /* 结束游戏（合并自独立监听器，避免重复绑定；保留当前难度） */
       const eg=ev.target.closest('[data-action="end-guess"]');
       if(eg){
-        synthStop();
+        GAMES.stopClip();
         app.innerHTML='<div class="kcard p-6 text-center"><div class="font-display text-xl">最终得分：'+score+'</div><p class="text-sm text-[var(--txt-2)] mt-2">'+gradeGuess(score)+'</p><button class="btn btn-berry px-6 py-2.5 text-sm mt-4" data-action="start-guess" data-diff="'+diff+'">再来一局</button></div>';
         return;
       }
       const o=ev.target.closest('[data-guess-opt]'); if(!o) return;
-      synthStop();
+      GAMES.stopClip();
       const ok = o.getAttribute('data-guess-opt')===target.id;
       if(ok) score++;
       round++;
@@ -4538,6 +4919,7 @@ const GAMES = {
           <div class="font-display text-2xl text-sakura2">你的轻音部等级：${examRank(score)}</div>
           <p class="text-sm text-[var(--txt-2)] mt-2">答对 ${score}/10 题。</p>
           <button class="btn btn-berry px-6 py-2.5 text-sm mt-4" data-action="start-exam">再考一次</button></div>`;
+        try{ ACHV.track('exam', score); }catch(e){}
       }
     };
     render();
@@ -4579,11 +4961,13 @@ const GAMES = {
       const c=CALLS[+b.getAttribute('data-call')];
       callTone(c.f); wave(Math.floor(Math.random()*5));
       toast(c.ja+'  '+c.zh);
+      try{ ACHV.track('call'); }catch(e){}
     }));
     const mix=$('#call-mix');
     if(mix) mix.addEventListener('click', ()=>{
       CALLS.forEach((c,i)=>setTimeout(()=>{ callTone(c.f); wave(i%5); }, i*450));
       toast('MIX 连击开始！よっしゃいくぞー！');
+      try{ ACHV.track('call'); }catch(e){}
     });
   }
 };
@@ -4617,7 +5001,498 @@ function examRank(score){
 }
 
 /* ============================================================
-   ⑫ 初始化 INIT
+   ⑫ 社区 / API 层（渐进式：离线双击照常用，在线才启用社区功能）
+   ------------------------------------------------------------
+   KON_API：探活 / 匿名身份（token + 昵称）/ GET / POST 封装
+   ACHV   ：成就系统（本机进度，在线时云同步）
+   DAILY  ：每日猜歌挑战（服务端选题与判定，客户端只上报猜测）
+   WALL   ：粉丝留言墙（先审后显）
+   未部署 fan_server.py 或处于离线（含 file:// 双击）时，以下功能一律降级为
+   占位提示，不影响站点其余部分。
+   ============================================================ */
+const KON_API = {
+  /* 同源部署留空；前后端分离部署时填后端地址，如 'https://api.example.com' */
+  base:'',
+  online:false, token:'', nick:'',
+  init(){
+    try{
+      this.token = localStorage.getItem('kon_token') || '';
+      this.nick  = localStorage.getItem('kon_nick') || '';
+    }catch(e){}
+    if(!this.token){
+      /* 匿名身份：随机 UUID 存本机。换浏览器即换身份，粉丝站不需要注册登录 */
+      this.token = (window.crypto && crypto.randomUUID
+        ? crypto.randomUUID()
+        : 'k'+Date.now()+Math.random().toString(36).slice(2)).replace(/[^A-Za-z0-9_\-]/g,'');
+      this.save();
+    }
+  },
+  save(){ try{ localStorage.setItem('kon_token', this.token); localStorage.setItem('kon_nick', this.nick||''); }catch(e){} },
+  setNick(n){ this.nick = n; this.save(); },
+  headers(){ return {'Content-Type':'application/json','X-Kon-Token':this.token}; },
+  /* 探活：2.5 秒超时；file:// 直接判定离线，不发无谓请求 */
+  async probe(){
+    if(location.protocol === 'file:'){ this.online = false; return false; }
+    try{
+      const ctl = new AbortController();
+      const t = setTimeout(()=>ctl.abort(), 2500);
+      const r = await fetch(this.base + '/api/ping', {signal:ctl.signal, cache:'no-store'});
+      clearTimeout(t);
+      const j = await r.json();
+      this.online = !!j.ok;
+    }catch(e){ this.online = false; }
+    return this.online;
+  },
+  async req(method, path, body){
+    const opt = {method, headers:this.headers(), cache:'no-store'};
+    if(body !== undefined && body !== null) opt.body = JSON.stringify(body);
+    const r = await fetch(this.base + path, opt);
+    let j;
+    try{ j = await r.json(); }catch(e){ throw new Error('服务端返回异常（'+r.status+'）'); }
+    if(!j.ok) throw new Error(j.error || ('请求失败（'+r.status+'）'));
+    return j;
+  },
+  get(path){ return this.req('GET', path); },
+  post(path, body){ return this.req('POST', path, body||{}); },
+  /* 需要昵称的操作统一先过这关；返回 Promise<boolean> */
+  ensureIdentity(){
+    if(this.nick) return Promise.resolve(true);
+    return new Promise(resolve=>{
+      const mask=$('#modal-mask'), box=$('#modal-box');
+      box.innerHTML = `<div class="p-5">
+        <div class="font-display text-xl">起个昵称吧 ♪</div>
+        <p class="text-sm text-[var(--txt-2)] mt-2">留言与上榜会显示这个昵称，身份只保存在你自己的浏览器里，不需要注册。</p>
+        <input id="kon-nick-input" maxlength="24" placeholder="例如：あずにゃん" class="w-full mt-4 px-3 py-2.5 rounded-xl border border-[var(--line)] bg-transparent outline-none focus:border-sakura2">
+        <div class="flex gap-2 mt-4">
+          <button class="btn btn-berry px-5 py-2.5 flex-1" data-nick="ok">就用这个</button>
+          <button class="btn btn-ghost px-5 py-2.5" data-nick="cancel">以后再说</button>
+        </div></div>`;
+      mask.classList.add('show');
+      const inp = $('#kon-nick-input');
+      setTimeout(()=>{ if(inp) inp.focus(); }, 60);
+      box.onclick = ev=>{
+        const b = ev.target.closest('[data-nick]'); if(!b) return;
+        if(b.getAttribute('data-nick')==='ok'){
+          const v = (inp && inp.value || '').trim().slice(0,24);
+          if(!v){ toast('昵称不能为空'); return; }
+          this.setNick(v);
+          this.post('/api/identify', {token:this.token, nickname:v}).catch(()=>{});
+          mask.classList.remove('show'); toast('你好，'+v+' ♪'); resolve(true);
+        }else{ mask.classList.remove('show'); resolve(false); }
+      };
+    });
+  },
+  offlineHtml(msg){
+    return '<div class="text-sm text-[var(--txt-2)] py-6 text-center">'+esc(msg||'社区服务未连接')+
+      '<div class="text-xs mt-2" style="opacity:.75">当前为离线模式：站点内容照常可用，留言墙 / 排行榜需要连接 fan_server.py 社区后端。</div></div>';
+  }
+};
+
+/* ---------- 成就系统 ---------- */
+const ACHV = {
+  KEY:'kon_achv',
+  DEFS:[
+    {k:'first_step',   ic:'♪', n:'初次到访',   d:'第一次打开应援站'},
+    {k:'route_five',   ic:'▦', n:'走遍全站',   d:'逛过 5 个以上不同栏目'},
+    {k:'all_chars',    ic:'♡', n:'全员推',     d:'看过 5 位主角的角色档案'},
+    {k:'play_20',      ic:'♬', n:'听过二十首', d:'播放过 20 首不同曲目'},
+    {k:'playlist_10',  ic:'☰', n:'歌单收藏家', d:'歌单与收藏合计 10 首'},
+    {k:'lyrics_import',ic:'✎', n:'歌词录入员', d:'导入过至少一首歌词'},
+    {k:'call_10',      ic:'◈', n:'打call十连', d:'在应援器挥棒 10 次'},
+    {k:'exam_master',  ic:'★', n:'入部优等生', d:'入部测试答对 8 题以上'},
+    {k:'comment_first',ic:'✉', n:'初次留言',   d:'在留言墙留下第一条留言'},
+    {k:'comment_five', ic:'✌', n:'常驻粉丝',   d:'累计留言达 5 条'},
+    {k:'daily_solved', ic:'◉', n:'今日猜歌王', d:'答对一次每日猜歌挑战'},
+    {k:'daily_streak3',ic:'⚡', n:'三连猜',     d:'连续 3 天参与每日猜歌'},
+    {k:'night_owl',    ic:'☾', n:'深夜部员',   d:'凌晨 0–5 点访问过站点'}
+  ],
+  got:{}, routes:{}, songs:{}, calls:0, msgs:0, dailyDates:[],
+  load(){
+    try{
+      const d = JSON.parse(localStorage.getItem(this.KEY)||'{}');
+      this.got=d.got||{}; this.routes=d.routes||{}; this.songs=d.songs||{};
+      this.calls=d.calls||0; this.msgs=d.msgs||0; this.dailyDates=d.dailyDates||[];
+    }catch(e){}
+    this._loaded = true;
+  },
+  ready(){ if(!this._loaded) this.load(); },
+  save(){
+    try{
+      localStorage.setItem(this.KEY, JSON.stringify({got:this.got, routes:this.routes, songs:this.songs,
+        calls:this.calls, msgs:this.msgs, dailyDates:this.dailyDates}));
+    }catch(e){}
+  },
+  def(k){ return this.DEFS.find(x=>x.k===k); },
+  unlock(k){
+    this.ready();
+    if(this.got[k] || !this.def(k)) return;
+    const d = this.def(k);
+    this.got[k] = Date.now(); this.save();
+    toast('成就解锁：'+d.ic+' '+d.n);
+    try{ confettiNotes(); }catch(e){}
+    this.sync();
+    if((location.hash||'').indexOf('/fun')>=0) this.renderWall();
+  },
+  ymd(dt){ return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); },
+  streak(){
+    const set = new Set(this.dailyDates);
+    let n=0, cur=new Date();
+    while(set.has(this.ymd(cur))){ n++; cur.setDate(cur.getDate()-1); }
+    return n;
+  },
+  track(ev, val){
+    this.ready();
+    switch(ev){
+      case 'route': {
+        const b = String(val||'/');
+        this.routes[b.split('/')[1] || 'home'] = 1;
+        const m = b.match(/^\/character\/(yui|mio|ritsu|tsumugi|azusa)$/);
+        if(m) this.routes['char_'+m[1]] = 1;
+        if(Object.keys(this.routes).filter(x=>x.indexOf('char_')!==0).length >= 5) this.unlock('route_five');
+        if(['yui','mio','ritsu','tsumugi','azusa'].every(c=>this.routes['char_'+c])) this.unlock('all_chars');
+        this.save(); break;
+      }
+      case 'play':
+        if(val){ this.songs[val]=1; this.save();
+          if(Object.keys(this.songs).length>=20) this.unlock('play_20'); }
+        break;
+      case 'call':
+        this.calls++; this.save(); if(this.calls>=10) this.unlock('call_10'); break;
+      case 'playlist':
+        if(val>=10) this.unlock('playlist_10'); break;
+      case 'lyrics': this.unlock('lyrics_import'); break;
+      case 'exam': if(val>=8) this.unlock('exam_master'); break;
+      case 'comment':
+        this.msgs++; this.save();
+        if(this.msgs>=1) this.unlock('comment_first');
+        if(this.msgs>=5) this.unlock('comment_five');
+        break;
+      case 'daily': {
+        const d = (val && val.date) || '';
+        if(d && this.dailyDates.indexOf(d)<0){ this.dailyDates.push(d); this.dailyDates = this.dailyDates.slice(-30); }
+        this.save();
+        if(val && val.correct) this.unlock('daily_solved');
+        if(this.streak()>=3) this.unlock('daily_streak3');
+        break;
+      }
+      case 'night': this.unlock('night_owl'); break;
+    }
+  },
+  sync(){
+    if(!KON_API.online || !KON_API.token) return Promise.resolve();
+    return KON_API.post('/api/achv', {token:KON_API.token, nickname:KON_API.nick, keys:Object.keys(this.got)})
+      .catch(()=>{});
+  },
+  async pull(){
+    if(!KON_API.online) return;
+    try{
+      const j = await KON_API.get('/api/achv?token='+encodeURIComponent(KON_API.token));
+      let changed=false;
+      (j.items||[]).forEach(it=>{ if(!this.got[it.key]){ this.got[it.key]=it.unlocked_at*1000; changed=true; } });
+      if(changed){ this.save(); this.renderWall(); }
+    }catch(e){}
+  },
+  init(){
+    this.load();
+    const h = new Date().getHours();
+    if(h<5) this.track('night');
+    this.unlock('first_step');
+    if(KON_API.online) this.pull();
+  },
+  renderWall(){
+    const app = $('#achv-app'); if(!app) return;
+    const gotN = Object.keys(this.got).length;
+    app.innerHTML = '<div class="kcard p-6">'
+      + '<div class="flex items-center justify-between flex-wrap gap-2 mb-4">'
+      +   '<div class="font-display text-lg">徽章墙 <span class="text-sm text-sakura2">'+gotN+' / '+this.DEFS.length+'</span></div>'
+      +   (KON_API.online
+            ? '<button class="btn btn-cream px-4 py-2 text-xs" id="achv-sync">同步到云端</button>'
+            : '<span class="text-xs text-[var(--txt-2)]">离线模式：进度只存在本机</span>')
+      + '</div>'
+      + '<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">'
+      + this.DEFS.map(d=>{
+          const ok = !!this.got[d.k];
+          return '<div class="rounded-xl p-3 text-center" style="background:'+(ok?'rgba(255,183,197,.16)':'rgba(0,0,0,.03)')
+            +';border:1px solid '+(ok?'#FFB7C5':'var(--line)')+'">'
+            +'<div class="text-2xl '+(ok?'text-sakura2':'opacity-30')+'">'+d.ic+'</div>'
+            +'<div class="text-sm font-bold mt-1 '+(ok?'':'opacity-50')+'">'+esc(d.n)+'</div>'
+            +'<div class="text-[11px] text-[var(--txt-2)] mt-0.5">'+esc(d.d)+'</div></div>';
+        }).join('')
+      + '</div>'
+      + '<p class="text-xs text-[var(--txt-2)] mt-4">进度保存在本机浏览器；昵称与云同步只在第一次留言 / 上榜时联机。</p>'
+      + '</div>';
+    const btn = $('#achv-sync');
+    if(btn) btn.addEventListener('click', ()=>{
+      KON_API.ensureIdentity().then(ok=>{
+        if(!ok) return;
+        this.sync().then(()=>toast('成就已同步到云端 ♪'));
+      });
+    });
+  }
+};
+
+/* ---------- 每日猜歌挑战 ---------- */
+const DAILY = {
+  st:null, clip:null, timer:null, marks:[],
+  stopClip(){
+    if(this.timer){ clearTimeout(this.timer); this.timer=null; }
+    if(this.clip){ try{ this.clip.pause(); }catch(e){} this.clip=null; }
+  },
+  pool(){ return SONGS.filter(s=>songPlayable(s) && !s.t.startsWith('K-ON!') && !s.lyricNote); },
+  async mount(){
+    const app = $('#daily-app'); if(!app) return;
+    const reload = $('#daily-reload');
+    if(reload) reload.onclick = ()=>this.mount();
+    if(!KON_API.online){ app.innerHTML = KON_API.offlineHtml('每日猜歌挑战需要连接社区服务'); return; }
+    app.innerHTML = '<div class="kcard p-6 text-sm text-[var(--txt-2)]">正在载入今日题目…</div>';
+    try{ this.st = await KON_API.get('/api/daily'); }
+    catch(e){ app.innerHTML = KON_API.offlineHtml('今日题目加载失败：'+e.message); return; }
+    this.marks = [];
+    this.render();
+  },
+  render(msg){
+    const app = $('#daily-app'); if(!app) return;
+    const st = this.st;
+    const pool = this.pool();
+    const used = (st.me && st.me.attempts) || 0;
+    if(st.me && st.me.solved){ return this.renderSolved(); }
+    if(used >= st.attempts_allowed){ return this.renderExhausted(); }
+    app.innerHTML = '<div class="kcard p-6">'
+      + '<div class="flex items-center justify-between flex-wrap gap-2 mb-4">'
+      +   '<span class="pill pill-mizu">'+esc(st.date)+' · 第 '+(used+1)+' / '+st.attempts_allowed+' 次</span>'
+      +   '<span class="text-xs text-[var(--txt-2)]">今日已有 '+st.solved_today+' 人猜中</span>'
+      + '</div>'
+      + '<div class="text-center py-4">'
+      +   '<button class="btn btn-berry px-8 py-3" id="daily-play">▶ 播放今日试听片段</button>'
+      +   '<p class="text-xs text-[var(--txt-2)] mt-2">听 30 秒试听，猜猜这是哪一首（最多 ' + st.attempts_allowed + ' 次机会）</p>'
+      + '</div>'
+      + '<div class="rounded-xl p-3 mb-4" style="background:rgba(168,216,234,.12)">'
+      +   '<div class="text-xs text-[var(--txt-2)] mb-1">已解锁提示</div>'
+      +   '<div class="flex flex-wrap gap-2">'
+      +     st.hints.filter(h=>h.at<=used).map(h=>'<span class="pill pill-brown">'+esc(h.label)+'：'+esc(h.value)+'</span>').join('')
+      +     (st.hints.filter(h=>h.at>used).length ? '<span class="text-xs text-[var(--txt-2)]">再猜 '+(st.hints.filter(h=>h.at>used)[0].at-used)+' 次可解锁下一条提示</span>' : '')
+      +   '</div>'
+      + '</div>'
+      + '<input id="daily-q" placeholder="输入歌名搜索，点击候选项提交…" class="w-full px-3 py-2.5 rounded-xl border border-[var(--line)] bg-transparent outline-none focus:border-sakura2 text-sm">'
+      + '<div id="daily-opts" class="grid sm:grid-cols-2 gap-2 mt-3"></div>'
+      + (msg ? '<div class="text-sm text-sakura2 mt-3">'+esc(msg)+'</div>' : '')
+      + '</div>';
+    const inp = $('#daily-q'), opts = $('#daily-opts');
+    const paint = ()=>{
+      const kw = (inp.value||'').trim().toLowerCase();
+      if(!kw){ opts.innerHTML=''; return; }
+      const hits = pool.filter(s=>s.t.toLowerCase().includes(kw) || (s.tZh||'').toLowerCase().includes(kw)).slice(0,8);
+      opts.innerHTML = hits.length
+        ? hits.map(s=>'<button class="btn btn-cream px-4 py-2.5 text-sm justify-start" data-daily-pick="'+s.id+'">'+esc(s.t)+' <span class="text-[10px] text-[var(--txt-2)] ml-1">'+esc(s.unit||'')+'</span></button>').join('')
+        : '<div class="text-xs text-[var(--txt-2)] py-2">没有匹配的曲目</div>';
+    };
+    if(inp) inp.addEventListener('input', paint);
+    if(opts) opts.addEventListener('click', ev=>{
+      const b = ev.target.closest('[data-daily-pick]'); if(!b) return;
+      this.submit(b.getAttribute('data-daily-pick'));
+    });
+    const play = $('#daily-play');
+    if(play) play.addEventListener('click', ()=>{
+      if(this.clip){ this.stopClip(); play.textContent='▶ 播放今日试听片段'; return; }
+      this.stopClip();
+      if(Player.isPlaying) Player.pause();
+      const a = new Audio(KON_API.base + st.audio_url);
+      a.volume = 0.6; this.clip = a;
+      a.play().catch(()=>toast('浏览器阻止了自动播放，请再点一次'));
+      play.textContent = '⏸ 停止播放';
+      a.onended = ()=>{ this.clip=null; if($('#daily-play')) $('#daily-play').textContent='▶ 播放今日试听片段'; };
+    });
+  },
+  renderSolved(){
+    const app = $('#daily-app'); if(!app) return;
+    this.stopClip();
+    const ans = this.st.answer || {};
+    app.innerHTML = '<div class="kcard p-6 text-center">'
+      + '<div class="font-display text-2xl text-matcha">答对了！🎸</div>'
+      + '<p class="text-sm text-[var(--txt-2)] mt-2">今日题目是《'+esc(ans.t||'—')+'》· '+esc(ans.unit||'')+'</p>'
+      + '<div class="flex justify-center gap-2 mt-4 flex-wrap">'
+      +   '<button class="btn btn-berry px-5 py-2 text-sm" id="daily-share">复制战报</button>'
+      +   '<button class="btn btn-cream px-5 py-2 text-sm" id="daily-board">看今日排行榜</button>'
+      + '</div><div id="daily-board-box" class="mt-4 text-left"></div></div>';
+    this.wireResult();
+  },
+  renderExhausted(){
+    const app = $('#daily-app'); if(!app) return;
+    this.stopClip();
+    const ans = this.st.answer || {};
+    app.innerHTML = '<div class="kcard p-6 text-center">'
+      + '<div class="font-display text-2xl text-sakura2">今天的次数用完了…</div>'
+      + '<p class="text-sm text-[var(--txt-2)] mt-2">正确答案是《'+esc(ans.t||'—')+'》· '+esc(ans.unit||'')+'。明天再来！</p>'
+      + '<div class="flex justify-center gap-2 mt-4 flex-wrap">'
+      +   '<button class="btn btn-cream px-5 py-2 text-sm" id="daily-board">看今日排行榜</button>'
+      +   '<button class="btn btn-ghost px-5 py-2 text-sm" data-route="/music">去音乐中心复习 →</button>'
+      + '</div><div id="daily-board-box" class="mt-4 text-left"></div></div>';
+    this.wireResult();
+  },
+  wireResult(){
+    const sh = $('#daily-share'), bd = $('#daily-board');
+    if(sh) sh.addEventListener('click', ()=>this.share());
+    if(bd) bd.addEventListener('click', ()=>this.showBoard());
+  },
+  shareText(){
+    const st = this.st, a = st.me ? st.me.attempts : this.marks.length;
+    const marks = this.marks.length ? this.marks : Array(Math.max(0,a-1)).fill(0).concat([1]);
+    const emoji = marks.map(x=>x?'🟩':'🟥').join('');
+    const solved = (st.me && st.me.solved);
+    return '🎸 轻音每日猜歌 ' + st.date + '\n' + emoji + ' ' + (solved ? a+'/'+st.attempts_allowed : 'X/'+st.attempts_allowed) + '\n放課後ティータイム応援站';
+  },
+  share(){
+    const txt = this.shareText();
+    const done = ()=>toast('战报已复制 ♪');
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(done).catch(()=>{ prompt('复制战报：', txt); });
+    }else{ prompt('复制战报：', txt); }
+  },
+  async showBoard(){
+    const box = $('#daily-board-box'); if(!box) return;
+    box.innerHTML = '<div class="text-xs text-[var(--txt-2)]">加载排行榜…</div>';
+    try{
+      const j = await KON_API.get('/api/daily/board');
+      const rows = j.board || [];
+      box.innerHTML = '<div class="rounded-xl p-4" style="background:rgba(255,183,197,.10)">'
+        + '<div class="text-xs text-[var(--txt-2)] mb-2">'+esc(j.date)+' 排行榜 · 今日 '+j.played+' 人参与</div>'
+        + (rows.length
+          ? '<ol class="text-sm space-y-1">'+rows.map(r=>'<li class="flex items-center justify-between"><span>'
+              +(r.rank<=3?['🥇','🥈','🥉'][r.rank-1]:'#'+r.rank)+' '+esc(r.nickname)+'</span>'
+              +'<span class="text-xs text-[var(--txt-2)]">'+r.attempts+' 次猜中</span></li>').join('')+'</ol>'
+          : '<div class="text-sm text-[var(--txt-2)]">今天还没有人猜中，你就差一点！</div>')
+        + '</div>';
+    }catch(e){ box.innerHTML = '<div class="text-xs text-[var(--txt-2)]">排行榜加载失败：'+esc(e.message)+'</div>'; }
+  },
+  async submit(sid){
+    const ok = await KON_API.ensureIdentity();
+    if(!ok) return;
+    try{
+      const j = await KON_API.post('/api/daily/guess', {token:KON_API.token, nickname:KON_API.nick, song_id:sid});
+      this.marks.push(j.correct ? 1 : 0);
+      ACHV.track('daily', {date:j.date || (this.st && this.st.date), correct:!!j.correct});
+      this.st.me = {attempts:j.attempts, solved:!!j.correct};
+      if(j.answer) this.st.answer = j.answer;
+      if(j.correct){ this.renderSolved(); toast('答对了！'+ (j.attempts) +' 次猜中 ♪'); }
+      else if(j.exhausted){ this.renderExhausted(); }
+      else { this.st.solved_today = this.st.solved_today||0; this.render('不对哦，还剩 '+j.remaining+' 次机会'); }
+    }catch(e){ toast(e.message); }
+  }
+};
+
+/* ---------- 粉丝留言墙 ---------- */
+const WALL = {
+  when(ts){
+    if(!ts) return '';
+    const d = new Date(ts*1000);
+    const p = n=>String(n).padStart(2,'0');
+    return (d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+  },
+  item(m){
+    const c = m.char_id && CHAR_MAP[m.char_id];
+    return '<div class="rounded-xl p-3" style="background:rgba(255,255,255,.55);border:1px solid var(--line)">'
+      + '<div class="flex items-center gap-2 mb-1">'
+      +   (c ? '<img src="'+(MEDIA[c.id]||'')+'" alt="" class="w-6 h-6 rounded-full object-cover" onerror="this.style.display=\'none\'">' : '')
+      +   '<span class="text-sm font-bold">'+esc(m.nickname)+'</span>'
+      +   (c ? '<span class="text-[10px] text-sakura2">@'+esc(c.nameZh)+'</span>' : '')
+      +   '<span class="text-[10px] text-[var(--txt-2)] ml-auto">'+esc(WALL.when(m.created_at))+'</span>'
+      + '</div>'
+      + '<p class="text-[13px] whitespace-pre-wrap leading-relaxed">'+esc(m.content)+'</p>'
+      + (m.reply ? '<div class="text-xs mt-2 pl-3 border-l-2 border-sakura2 text-[var(--txt-2)]">站长回复：'+esc(m.reply)+'</div>' : '')
+      + '</div>';
+  },
+  async mountHome(){
+    const host = $('#home-wall-list'); if(!host) return;
+    if(!KON_API.online){ host.innerHTML = KON_API.offlineHtml('留言墙需要连接社区服务'); return; }
+    try{
+      const j = await KON_API.get('/api/messages?limit=4');
+      host.innerHTML = (j.items && j.items.length)
+        ? '<div class="grid sm:grid-cols-2 gap-3">'+j.items.map(m=>this.item(m)).join('')+'</div>'
+        : '<p class="text-sm text-[var(--txt-2)] py-4 text-center">还没有留言，来当第一个吧 ♪</p>';
+    }catch(e){ host.innerHTML = KON_API.offlineHtml('留言加载失败'); }
+    /* 数据统计卡下方的社区动态（离线时留空，不影响原有六项统计） */
+    const cs = $('#home-community-stats');
+    if(cs){
+      try{
+        const s = await KON_API.get('/api/stats');
+        cs.textContent = '社区动态：留言 '+s.messages+' 条 · 访客 '+s.players
+          + ' 人 · 今日 '+s.played_today+' 人参与每日猜歌、'+s.solved_today+' 人猜中 · 近 7 日活跃 '+s.active7+' 人';
+      }catch(e){ cs.textContent = ''; }
+    }
+  },
+  formHtml(){
+    return '<div class="kcard p-5">'
+      + '<div class="font-display text-lg mb-3">写一条留言</div>'
+      + '<div class="flex gap-2 mb-2 flex-wrap">'
+      +   '<input id="wall-nick" maxlength="24" placeholder="昵称" class="px-3 py-2 rounded-xl border border-[var(--line)] bg-transparent outline-none focus:border-sakura2 text-sm" style="flex:1;min-width:120px">'
+      +   '<select id="wall-char" class="px-2 py-2 rounded-xl border border-[var(--line)] bg-transparent text-sm outline-none"><option value="">@ 角色（可选）</option>'
+      +     CHARACTERS.filter(c=>CHAR_MAP[c.id]).map(c=>'<option value="'+c.id+'">'+esc(c.nameZh)+'</option>').join('')+'</select>'
+      + '</div>'
+      + '<textarea id="wall-text" maxlength="500" rows="3" placeholder="对轻音部的爱、想说的话……（提交后需站长审核才会显示）" class="w-full px-3 py-2.5 rounded-xl border border-[var(--line)] bg-transparent outline-none focus:border-sakura2 text-sm"></textarea>'
+      + '<div class="flex items-center gap-3 mt-3"><button class="btn btn-berry px-5 py-2.5 text-sm" id="wall-send">提交留言</button>'
+      + '<span class="text-xs text-[var(--txt-2)]">先审后显 · 请友善发言</span></div>'
+      + '<div id="wall-msg" class="text-sm text-sakura2 mt-2"></div></div>';
+  },
+  wireForm(){
+    const more = $('#wall-more');
+    if(more) more.addEventListener('click', ()=>this.load(true));
+    const send = $('#wall-send'); if(!send) return;
+    const ni = $('#wall-nick'); if(ni && KON_API.nick) ni.value = KON_API.nick;
+    send.addEventListener('click', async ()=>{
+      if(!KON_API.online){ toast('社区服务未连接'); return; }
+      const text = ($('#wall-text').value||'').trim();
+      if(text.length < 2){ toast('留言太短了'); return; }
+      const ok = await KON_API.ensureIdentity();
+      if(!ok) return;
+      const nick = (($('#wall-nick').value||'').trim() || KON_API.nick).slice(0,24);
+      KON_API.setNick(nick);
+      send.disabled = true;
+      try{
+        await KON_API.post('/api/messages', {token:KON_API.token, nickname:nick, content:text,
+          char_id: ($('#wall-char').value||'')});
+        $('#wall-text').value = '';
+        const box = $('#wall-msg');
+        if(box) box.textContent = '已提交，通过审核后就会出现在墙上 ♪';
+        toast('留言已提交，等待审核 ♪');
+        ACHV.track('comment');
+        this.load(true);
+      }catch(e){ toast(e.message); }
+      send.disabled = false;
+    });
+  },
+  async load(append){
+    const host = $('#wall-list'); if(!host) return;
+    if(!KON_API.online){ host.innerHTML = KON_API.offlineHtml('留言墙需要连接社区服务'); return; }
+    if(!append) host.innerHTML = '<div class="text-sm text-[var(--txt-2)] py-4">正在载入…</div>';
+    try{
+      const before = append ? (this._last || 0) : 0;
+      const j = await KON_API.get('/api/messages?limit=10' + (before ? '&before='+before : ''));
+      const html = (j.items||[]).map(m=>this.item(m)).join('');
+      if(append){ host.insertAdjacentHTML('beforeend', html); }
+      else { host.innerHTML = html || '<div class="text-sm text-[var(--txt-2)] py-4">还没有留言，来当第一个吧 ♪</div>'; }
+      this._last = (j.items && j.items.length) ? j.items[j.items.length-1].id : this._last;
+      const more = $('#wall-more');
+      if(more) more.style.display = j.more ? 'inline-flex' : 'none';
+    }catch(e){ host.innerHTML = KON_API.offlineHtml('留言加载失败：'+e.message); }
+  }
+};
+function viewWall(){
+  return `
+  <button class="btn btn-ghost px-4 py-1.5 text-sm mb-5" data-route="/">← 返回首页</button>
+  <header class="mb-6"><h1 class="font-display text-3xl text-cocoa dark:text-cream">粉丝留言墙 <span class="text-base font-body text-sakura2">Message Wall</span></h1>
+  <p class="text-sm text-[var(--txt-2)] mt-1">给放課後ティータイム 留句话吧。留言经站长审核后公开显示，昵称与身份只保存在你自己的浏览器。</p></header>
+  ${noteDivider()}
+  <div class="grid lg:grid-cols-5 gap-5">
+    <div class="lg:col-span-2">${WALL.formHtml()}</div>
+    <div class="lg:col-span-3">
+      <div id="wall-list" class="space-y-3"></div>
+      <div class="text-center mt-4"><button class="btn btn-cream px-5 py-2 text-sm" id="wall-more" style="display:none">加载更多</button></div>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   ⑬ 初始化 INIT
    ============================================================ */
 function initStatsCounter(){
   const els=$$('[data-count]');
@@ -4644,6 +5519,7 @@ function hideLoader(){
 function init(){
   Playlists.load();
   LyricStore.load();
+  KON_API.init();
   /* 恢复上次的音量/模式/静音/悬浮歌词，并还原「上次播放到哪」——必须先于 Player._render() */
   const hadSaved = Player._restoreState();
   initNav();
@@ -4664,11 +5540,20 @@ function init(){
   setTimeout(hideLoader, 1600);
   /* 首次路由（默认首页） */
   Router.render(normRoute(location.hash));
+  /* 社区服务探活（异步，不阻塞首屏）：首屏先按离线占位渲染，
+     探活成功后重挂当前页的社区模块（留言墙 / 每日猜歌 / 成就墙） */
+  KON_API.probe().then(()=>{
+    ACHV.init();
+    const base = Router.current.split('#')[0];
+    if(base==='/') WALL.mountHome();
+    else if(base==='/wall'){ WALL.load(); WALL.wireForm(); }
+    else if(base==='/fun'){ DAILY.mount(); ACHV.renderWall(); }
+  });
   /* 自动播放：有存档时改为「等你点一下继续」，不覆盖上次的进度 */
   setTimeout(()=>{
     const tryPlay = () => {
       try {
-        if(!Player.song){ const s = SONGS.find(x=>x.cat==='op') || SONGS[0]; Player.playSong(s); }
+        if(!Player.song){ const s = SONGS.find(x=>x.cat==='op' && songPlayable(x)) || SONGS.find(songPlayable); if(!s) return; Player.playSong(s); }
         else Player.play();
       } catch(e){}
     };
@@ -4684,13 +5569,7 @@ function init(){
     setTimeout(()=>{
       if(!Player.isPlaying){
         toast('浏览器限制自动播放，点击页面任意位置即可开始音乐 ♪');
-        const onFirst = () => {
-          document.removeEventListener('click', onFirst);
-          document.removeEventListener('keydown', onFirst);
-          tryPlay();
-        };
-        document.addEventListener('click', onFirst);
-        document.addEventListener('keydown', onFirst);
+        armFirstGestureResume();
       }
     }, 600);
   }, 1200);

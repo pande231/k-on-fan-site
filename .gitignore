@@ -12,3 +12,41 @@ _preview/
 
 # 图片 QA 裁切产物（_qa_crops/tile*.png、zoom*.png 等）
 _qa_crops/
+
+# 静态托管发布产物（见 BACKEND.md「免费方案 A」）
+dist/
+
+# 社区后端运行期产物（fan_server.py）
+fan_data.db
+fan_data.db-wal
+fan_data.db-shm
+_cache/
+# 管理员令牌（首次启动自动生成，绝不入库）—— _*.txt 规则已覆盖，此处显式标注
+_admin_token.txt
+
+# ---- 以下为推送 GitHub 前补充 ----
+# 开发辅助脚本（PowerShell）与临时 JSON 产物
+_*.ps1
+_*.json
+
+# 发布包（体积大、可由 dist/ 重建）
+*.zip
+
+# 截图 / 测量 / 裁剪 / 备份产物
+_style_shots/
+_newface/
+_tmp_check/
+_backup/
+__pycache__/
+*.pyc
+_*.png
+
+# 无引用的分析残留图
+assets/_*
+
+# 控制台 / 社区后端整包：内含 _admin_token.txt、_admin_data.json、fan_data.db，
+# 一旦入库即为公开泄密。需要发布后端源码时，请先逐个检查再手动挑选文件加入。
+kongzhit/
+
+# 宠物生成子项目（与本站点无关）
+pet-build/

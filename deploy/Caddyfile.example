@@ -1,0 +1,59 @@
+# K-ON! 粉丝站 · Caddy 反向代理示例（HTTPS 自动签发）
+# ============================================================
+# 用法：
+#   1. 把本文件改名为 Caddyfile，放到 Caddy 工作目录
+#   2. 把 kon.example.com 换成你自己的域名（域名需先解析到这台服务器）
+#   3. Caddy 会自动申请 Let's Encrypt 证书并续期，无需手工配 HTTPS
+#   4. 后端 fan_server.py 保持只监听 127.0.0.1:8790（不要 --host 0.0.0.0）
+#
+# 启动后端（建议用 systemd，见 fan-site.service）：
+#   python fan_server.py --port 8790 --trust-proxy
+#
+# 注意 --trust-proxy：只有在「后端只能被本机 Caddy 访问」时才可开启，
+# 否则访客可以伪造 X-Forwarded-For 绕过限流。
+
+kon.example.com {
+	encode zstd gzip
+
+	# 安全响应头（CSP 暂不启用：站点是内联脚本 + 内联 Tailwind，需要单独适配）
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "SAMEORIGIN"
+		-Server
+	}
+
+	log {
+		output file /var/log/caddy/kon-fansite.log
+		format json
+	}
+
+	# ---- 社区后端 API（动态数据：留言墙 / 每日猜歌 / 成就 / 统计 / 数据接口）----
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8790 {
+			header_up X-Real-IP {remote_host}
+		}
+	}
+
+	# ---- 静态站点：由 Caddy 直出，比让 Python 发文件更高效 ----
+	# 注意：只暴露站点本体与 assets/，admin_server.py / fan_server.py 等
+	#      维护工具一律不对外（fan_server 自己也拒绝服务 admin.html）。
+	handle /assets/* {
+		root * /srv/kon-fansite
+		file_server
+		header Cache-Control "public, max-age=86400"
+	}
+
+	handle {
+		root * /srv/kon-fansite
+		rewrite * /轻音少女粉丝站.html
+		file_server
+		header Cache-Control "no-cache"
+	}
+}
+
+# ---- 想同时在本机调试后端（不经过域名）可加这一节 ----
+# :8791 {
+# 	reverse_proxy 127.0.0.1:8790
+# }

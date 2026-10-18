@@ -1,0 +1,41 @@
+# K-ON! 粉丝站 · systemd 单元示例（Linux 服务器）
+# ============================================================
+# 安装：
+#   sudo cp deploy/fan-site.service /etc/systemd/system/fan-site.service
+#   sudo nano /etc/systemd/system/fan-site.service   # 改 User / WorkingDirectory
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now fan-site
+#   systemctl status fan-site
+#   journalctl -u fan-site -f                        # 看日志
+#
+# 前提：站点目录下已跑过一次 fan_server.py，生成了 _admin_token.txt；
+#       运行用户对目录有写权限（要写 fan_data.db / _cache/）。
+
+[Unit]
+Description=K-ON Fansite Community Backend (fan_server.py)
+Documentation=file:///srv/kon-fansite/BACKEND.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/srv/kon-fansite
+
+# 只监听本机，由 Caddy/nginx 对外提供 HTTPS
+# --trust-proxy 必须配合「后端仅本机可达」使用
+ExecStart=/usr/bin/python3 fan_server.py --host 127.0.0.1 --port 8790 --trust-proxy
+
+Restart=always
+RestartSec=3
+
+# 加固：只允许写自己的工作目录，其余只读
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/kon-fansite
+
+[Install]
+WantedBy=multi-user.target
