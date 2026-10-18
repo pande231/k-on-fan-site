@@ -1,0 +1,59 @@
+# 自动把站点发布到 GitHub Pages
+#
+# 为什么要有这个文件：GitHub Pages 要求发布目录里有 index.html，
+# 而本项目主文件是中文名「轻音少女粉丝站.html」（为了保住双击即用的习惯，不改名）。
+# 所以在这里由 CI 复制一份 index.html 再发布 —— 仓库里始终只有一份源码，不会出现两份内容不一致。
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 组装发布目录
+        run: |
+          set -e
+          echo "--- 仓库根目录的 HTML ---"
+          ls -1 *.html
+          mkdir -p _site
+          cp "轻音少女粉丝站.html" _site/index.html
+          cp -r assets _site/assets
+          # 保险：确认入口文件真的存在且非空
+          test -s _site/index.html
+          echo "--- 发布目录体积 ---"
+          du -sh _site
+
+      - name: 配置 Pages
+        uses: actions/configure-pages@v5
+
+      - name: 上传产物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 发布
+        id: deployment
+        uses: actions/deploy-pages@v4
